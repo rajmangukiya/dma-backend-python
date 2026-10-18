@@ -1,0 +1,12 @@
+{
+  // Hide generated caches from the file explorer and search
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.ruff_cache": true,
+    "**/__init__.py": true
+  },
+  "[markdown]": {
+    "editor.wordWrap": "off"
+  }
+}

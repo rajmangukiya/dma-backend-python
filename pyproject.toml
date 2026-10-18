@@ -1,0 +1,31 @@
+[project]
+name = "dma-backend"
+version = "0.1.0"
+description = "Document Matching Agent — Python backend"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.143.3",
+    "pydantic-settings>=2.16.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.13.1",
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+]
+
+# An application, not a library: uv installs dependencies only, nothing to build
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+# E/F: errors · I: import sorting · UP: modern syntax · B: likely bugs
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

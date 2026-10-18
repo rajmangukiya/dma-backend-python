@@ -1,0 +1,2 @@
+- used to create types
+- validate data at runtime
