@@ -4,9 +4,11 @@ def inc(func):
 
     return newFunc
 
+
 @inc
 def my_function(arg1):
     return arg1
+
 
 print(my_function)
 print(my_function(5))

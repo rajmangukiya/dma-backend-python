@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     environment: Literal["development", "production", "test"] = "development"
     client_url: str = "http://localhost:5173"
 
+    # postgresql+asyncpg:// = the PostgreSQL dialect through the async asyncpg driver
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/dma_py"
+    database_echo: bool = False  # log every SQL statement (useful while learning)
+
     @property
     def is_production(self) -> bool:
         return self.environment == "production"

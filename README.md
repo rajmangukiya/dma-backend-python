@@ -12,6 +12,10 @@ Python rewrite of `dma-backend`. Stack: see [tech-stack.md](tech-stack.md).
 | Run tests | `uv run pytest` | `npm test` |
 | Lint | `uv run ruff check .` (auto-fix: `--fix`) | `eslint` |
 | Format | `uv run ruff format .` | `prettier --write` |
+| Create a migration from model changes | `uv run alembic revision --autogenerate -m "add users"` | `typeorm migration:generate` |
+| Apply migrations | `uv run alembic upgrade head` | `typeorm migration:run` |
+| Undo the last migration | `uv run alembic downgrade -1` | `typeorm migration:revert` |
+| Show current / history | `uv run alembic current` · `uv run alembic history` | — |
 
 - API: http://localhost:8000/api/health
 - Interactive docs (generated from the code): http://localhost:8000/docs
@@ -23,17 +27,25 @@ pyproject.toml        # package.json: dependencies + tool config (Ruff, pytest)
 uv.lock               # package-lock.json — commit it
 .python-version       # pins Python 3.13 (like .nvmrc)
 .env / .env.example   # configuration (.env is gitignored)
+alembic.ini           # Alembic settings (file naming, Ruff hooks); DB URL comes from .env
+migrations/
+  env.py              # connects Alembic to app settings + Base.metadata
+  script.py.mako      # template for new migration files
+  versions/           # the migration files themselves
 app/
   main.py             # creates the app: CORS, error handlers, mounts the API under /api
   core/
     config.py         # Settings read from .env (pydantic-settings)
     errors.py         # AppError + handlers returning { success: false, message, details }
+  db/
+    base.py           # Base class for table models (+ constraint naming convention)
+    session.py        # async engine, session factory, get_db dependency
   schemas/
     common.py         # ApiResponse[T] envelope { success, message, data } + ok() helper
   api/
     router.py         # collects every feature router
     routes/
-      health.py       # GET /api/health
+      health.py       # GET /api/health (also checks the database)
 tests/
   test_health.py
   test_errors.py      # error shapes: validation 400, AppError, 404, 500
@@ -65,6 +77,20 @@ Every folder with Python files has an `__init__.py`, which marks it as a package
 - **Middleware**: `CORSMiddleware`, `allow_credentials` with cookies
 - **`async def` vs `def` routes**: FastAPI runs plain `def` routes in a thread pool
 - **pytest**: building a throwaway app inside a test; `TestClient(raise_server_exceptions=False)`
+
+## Database setup — what to look up
+
+- **SQLAlchemy 2.0 overview**: Engine, Connection, Session; ORM vs Core
+- **Async SQLAlchemy**: `create_async_engine`, `AsyncSession`, `async_sessionmaker`; why lazy loading doesn't work and what `selectinload` does
+- **Database URLs and drivers**: `postgresql+asyncpg://...` (dialect + driver); asyncpg vs psycopg 3
+- **Connection pooling**: what `pool_pre_ping` does; why one engine per process
+- **`expire_on_commit=False`**: what "expired" attributes are
+- **FastAPI dependencies with `yield`**: `get_db` opens a session per request and closes it afterwards
+- **`Annotated[AsyncSession, Depends(get_db)]`**: the modern way to declare dependencies
+- **Lifespan events**: `@asynccontextmanager` + `yield` for startup/shutdown
+- **Alembic**: revisions, `upgrade head`, `downgrade`, autogenerate and its limits (always review generated migrations)
+- **Constraint naming conventions**: why Alembic needs predictable names
+- **`dependency_overrides`**: replacing dependencies in tests
 
 ## Open questions for our next discussion
 
