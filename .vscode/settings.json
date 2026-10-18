@@ -8,5 +8,9 @@
   },
   "[markdown]": {
     "editor.wordWrap": "off"
+  },
+  // Light green comments, easier to tell apart from code
+  "editor.tokenColorCustomizations": {
+    "comments": "#1b6e1e"
   }
 }

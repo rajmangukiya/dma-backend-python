@@ -6,12 +6,11 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+# Importing the models package registers every table on Base.metadata,
+# otherwise autogenerate wouldn't see them
+import app.db.models  # noqa: E402, F401
 from app.core.config import get_settings
 from app.db.base import Base
-
-# Import every model module here so its tables register on Base.metadata,
-# otherwise autogenerate won't see them. (None yet — tables come from the ERD.)
-# from app.db.models import company, user  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

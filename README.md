@@ -38,8 +38,15 @@ app/
     config.py         # Settings read from .env (pydantic-settings)
     errors.py         # AppError + handlers returning { success: false, message, details }
   db/
-    base.py           # Base class for table models (+ constraint naming convention)
+    base.py           # Base class, timestamp mixins, pg_enum helper, constraint naming
     session.py        # async engine, session factory, get_db dependency
+    models/           # one module per area; __init__.py re-exports every model
+      enums.py        # UserRole, FieldType, DocumentStatus
+      company.py      # companies
+      user.py         # users
+      template.py     # document_templates, _fields, _field_matches (skeletons)
+      journey.py      # journeys, segments
+      document.py     # documents, document_fields, _match_rules, _values, uploaded_files
   schemas/
     common.py         # ApiResponse[T] envelope { success, message, data } + ok() helper
   api/
@@ -91,6 +98,17 @@ Every folder with Python files has an `__init__.py`, which marks it as a package
 - **Alembic**: revisions, `upgrade head`, `downgrade`, autogenerate and its limits (always review generated migrations)
 - **Constraint naming conventions**: why Alembic needs predictable names
 - **`dependency_overrides`**: replacing dependencies in tests
+
+## Models — what to look up
+
+- **Declarative mapping (2.0 style)**: `Mapped[...]` + `mapped_column(...)`; nullability comes from the type (`int | None`)
+- **Mixins**: sharing columns between models (`TimestampMixin`); method resolution order (why mixins come before `Base`)
+- **`server_default` vs `default`**: database-side vs Python-side defaults; `onupdate`
+- **`ForeignKey(..., ondelete="CASCADE" / "SET NULL")`**
+- **`__table_args__`**: `UniqueConstraint`, `CheckConstraint`
+- **Enums**: Python `StrEnum`; SQLAlchemy `Enum` with `values_callable` (store `"admin"`, not `"ADMIN"`)
+- **Alembic autogenerate limits**: it doesn't drop PostgreSQL enum types in `downgrade()` — we added that by hand; `alembic check` to detect drift
+- **`relationship()`**: not used yet; we'll add relationships when queries need them (and learn `selectinload` for async)
 
 ## Open questions for our next discussion
 
