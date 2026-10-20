@@ -1,0 +1,1433 @@
+{
+  "documentSkeletons": [
+    [
+      "tender",
+      "Load Tender",
+      "LOAD_TENDER",
+      "Shipper's request to move a load — EDI 204 tender, email intake or load-board post. First record of the shipper's requirements.",
+      [
+        [
+          "Tender reference",
+          "code"
+        ],
+        [
+          "Tender channel",
+          "text"
+        ],
+        [
+          "Shipper",
+          "party"
+        ],
+        [
+          "Consignee",
+          "party"
+        ],
+        [
+          "Origin address",
+          "text"
+        ],
+        [
+          "Destination address",
+          "text"
+        ],
+        [
+          "Pickup date",
+          "date"
+        ],
+        [
+          "Delivery date",
+          "date"
+        ],
+        [
+          "Commodity",
+          "text"
+        ],
+        [
+          "Weight",
+          "weight"
+        ],
+        [
+          "Piece count",
+          "number"
+        ],
+        [
+          "Equipment type",
+          "text"
+        ],
+        [
+          "Special instructions",
+          "text"
+        ]
+      ]
+    ],
+    [
+      "quote",
+      "Rate Quote",
+      "RATE_QUOTE",
+      "Broker's price for the lane, checked against DAT RateView / iQ, Truckstop RateInsight, Greenscreens.ai and network history.",
+      [
+        [
+          "Quote number",
+          "code"
+        ],
+        [
+          "Shipper",
+          "party"
+        ],
+        [
+          "Origin address",
+          "text"
+        ],
+        [
+          "Destination address",
+          "text"
+        ],
+        [
+          "Equipment type",
+          "text"
+        ],
+        [
+          "Market rate",
+          "currency"
+        ],
+        [
+          "Shipper rate",
+          "currency"
+        ],
+        [
+          "Rate source",
+          "text"
+        ]
+      ]
+    ],
+    [
+      "po",
+      "Purchase Order",
+      "PURCHASE_ORDER",
+      "Shipper accepts the quote and issues a PO. The PO number must follow the load through to the shipper invoice.",
+      [
+        [
+          "PO number",
+          "code"
+        ],
+        [
+          "Quote number",
+          "code"
+        ],
+        [
+          "Shipper",
+          "party"
+        ],
+        [
+          "Origin address",
+          "text"
+        ],
+        [
+          "Destination address",
+          "text"
+        ],
+        [
+          "Pickup date",
+          "date"
+        ],
+        [
+          "Commodity",
+          "text"
+        ],
+        [
+          "Weight",
+          "weight"
+        ],
+        [
+          "Shipper rate",
+          "currency"
+        ]
+      ]
+    ],
+    [
+      "load",
+      "Load Record",
+      "LOAD_RECORD",
+      "Internal load created in the broker's TMS. Its load number is the spine of every later document.",
+      [
+        [
+          "Load number",
+          "code"
+        ],
+        [
+          "PO number",
+          "code"
+        ],
+        [
+          "Shipper",
+          "party"
+        ],
+        [
+          "Origin address",
+          "text"
+        ],
+        [
+          "Destination address",
+          "text"
+        ],
+        [
+          "Pickup appointment",
+          "text"
+        ],
+        [
+          "Delivery appointment",
+          "text"
+        ],
+        [
+          "Equipment type",
+          "text"
+        ],
+        [
+          "Shipper rate",
+          "currency"
+        ]
+      ]
+    ],
+    [
+      "carrier",
+      "Carrier Setup Packet",
+      "CARRIER_SETUP",
+      "Carrier onboarding before booking: MC authority, insurance certificates and payment / factoring details.",
+      [
+        [
+          "Carrier name",
+          "party"
+        ],
+        [
+          "MC number",
+          "code"
+        ],
+        [
+          "DOT number",
+          "code"
+        ],
+        [
+          "Insurance provider",
+          "party"
+        ],
+        [
+          "Insurance expiry",
+          "date"
+        ],
+        [
+          "Cargo insurance limit",
+          "currency"
+        ],
+        [
+          "Factoring company",
+          "party"
+        ],
+        [
+          "Remit-to",
+          "party"
+        ]
+      ]
+    ],
+    [
+      "ratecon",
+      "Rate Confirmation",
+      "RATE_CON",
+      "Broker's agreement with the carrier, generated in the TMS and signed before dispatch. Itemises linehaul, fuel surcharge and accessorial terms negotiated on the call.",
+      [
+        [
+          "Load number",
+          "code"
+        ],
+        [
+          "PO number",
+          "code"
+        ],
+        [
+          "Carrier name",
+          "party"
+        ],
+        [
+          "MC number",
+          "code"
+        ],
+        [
+          "Origin address",
+          "text"
+        ],
+        [
+          "Destination address",
+          "text"
+        ],
+        [
+          "Pickup appointment",
+          "text"
+        ],
+        [
+          "Delivery appointment",
+          "text"
+        ],
+        [
+          "Commodity",
+          "text"
+        ],
+        [
+          "Weight",
+          "weight"
+        ],
+        [
+          "Piece count",
+          "number"
+        ],
+        [
+          "Equipment type",
+          "text"
+        ],
+        [
+          "Linehaul rate",
+          "currency"
+        ],
+        [
+          "Fuel surcharge",
+          "currency"
+        ],
+        [
+          "Total carrier rate",
+          "currency"
+        ],
+        [
+          "Detention terms",
+          "text"
+        ],
+        [
+          "Lumper policy",
+          "text"
+        ],
+        [
+          "Extra stop fee",
+          "currency"
+        ],
+        [
+          "TONU fee",
+          "currency"
+        ],
+        [
+          "Payment terms",
+          "text"
+        ],
+        [
+          "Signed by",
+          "party"
+        ],
+        [
+          "Signed date",
+          "date"
+        ]
+      ]
+    ],
+    [
+      "bol",
+      "Bill of Lading",
+      "BOL",
+      "Generated at pickup. The shipper's stated quantity is the reference for shortage / damage disputes; dock times back up detention claims.",
+      [
+        [
+          "BOL number",
+          "code"
+        ],
+        [
+          "Load number",
+          "code"
+        ],
+        [
+          "PO number",
+          "code"
+        ],
+        [
+          "Shipper",
+          "party"
+        ],
+        [
+          "Consignee",
+          "party"
+        ],
+        [
+          "Carrier name",
+          "party"
+        ],
+        [
+          "Commodity",
+          "text"
+        ],
+        [
+          "Weight",
+          "weight"
+        ],
+        [
+          "Piece count",
+          "number"
+        ],
+        [
+          "Special instructions",
+          "text"
+        ],
+        [
+          "Pickup arrival time",
+          "date"
+        ],
+        [
+          "Loading start time",
+          "date"
+        ],
+        [
+          "Loading complete time",
+          "date"
+        ],
+        [
+          "Pickup departure time",
+          "date"
+        ],
+        [
+          "Shipper signature",
+          "party"
+        ],
+        [
+          "Driver signature",
+          "party"
+        ]
+      ]
+    ],
+    [
+      "tracking",
+      "Tracking Log",
+      "TRACKING_LOG",
+      "ELD / GPS pings or interval check calls during transit: location, ETA, delay flags and milestone times.",
+      [
+        [
+          "Load number",
+          "code"
+        ],
+        [
+          "Pickup arrival time",
+          "date"
+        ],
+        [
+          "Pickup departure time",
+          "date"
+        ],
+        [
+          "Delivery arrival time",
+          "date"
+        ],
+        [
+          "Last known location",
+          "text"
+        ],
+        [
+          "Delay notes",
+          "text"
+        ]
+      ]
+    ],
+    [
+      "lumper",
+      "Lumper Receipt",
+      "LUMPER_RECEIPT",
+      "Receipt for unloading paid by the driver at the receiver; reimbursed through the carrier invoice.",
+      [
+        [
+          "Receipt number",
+          "code"
+        ],
+        [
+          "Load number",
+          "code"
+        ],
+        [
+          "Lumper company",
+          "party"
+        ],
+        [
+          "Facility",
+          "text"
+        ],
+        [
+          "Lumper amount",
+          "currency"
+        ],
+        [
+          "Receipt date",
+          "date"
+        ]
+      ]
+    ],
+    [
+      "pod",
+      "Proof of Delivery",
+      "POD",
+      "Receiver-signed BOL or a separate POD, photographed by the driver. Records shortages, overages and damage.",
+      [
+        [
+          "BOL number",
+          "code"
+        ],
+        [
+          "Load number",
+          "code"
+        ],
+        [
+          "Consignee",
+          "party"
+        ],
+        [
+          "Piece count",
+          "number"
+        ],
+        [
+          "Delivery arrival time",
+          "date"
+        ],
+        [
+          "Freight condition",
+          "text"
+        ],
+        [
+          "Exception notes",
+          "text"
+        ],
+        [
+          "Receiver signature",
+          "party"
+        ]
+      ]
+    ],
+    [
+      "carrier_inv",
+      "Carrier Invoice",
+      "CARRIER_INVOICE",
+      "Bill from the carrier (or its factoring company) with rate con, BOL, POD and lumper receipt. Line items are checked against the rate confirmation.",
+      [
+        [
+          "Carrier invoice number",
+          "code"
+        ],
+        [
+          "Load number",
+          "code"
+        ],
+        [
+          "Carrier name",
+          "party"
+        ],
+        [
+          "MC number",
+          "code"
+        ],
+        [
+          "Remit-to",
+          "party"
+        ],
+        [
+          "Linehaul rate",
+          "currency"
+        ],
+        [
+          "Fuel surcharge",
+          "currency"
+        ],
+        [
+          "Detention charge",
+          "currency"
+        ],
+        [
+          "Layover charge",
+          "currency"
+        ],
+        [
+          "Lumper amount",
+          "currency"
+        ],
+        [
+          "Extra stop fee",
+          "currency"
+        ],
+        [
+          "TONU fee",
+          "currency"
+        ],
+        [
+          "Amount due",
+          "currency"
+        ],
+        [
+          "Invoice date",
+          "date"
+        ]
+      ]
+    ],
+    [
+      "carrier_pay",
+      "Carrier Payment",
+      "CARRIER_PAYMENT",
+      "Payment scheduled once the packet is clean — right payee, right due date, no duplicate payment.",
+      [
+        [
+          "Load number",
+          "code"
+        ],
+        [
+          "Carrier invoice number",
+          "code"
+        ],
+        [
+          "Remit-to",
+          "party"
+        ],
+        [
+          "Amount due",
+          "currency"
+        ],
+        [
+          "Payment terms",
+          "text"
+        ],
+        [
+          "Due date",
+          "date"
+        ]
+      ]
+    ],
+    [
+      "shipper_inv",
+      "Shipper Invoice",
+      "SHIPPER_INVOICE",
+      "Broker's invoice to the shipper, assembled to their requirements with POD, BOL, rate reference and accessorial backup.",
+      [
+        [
+          "Shipper invoice number",
+          "code"
+        ],
+        [
+          "PO number",
+          "code"
+        ],
+        [
+          "Load number",
+          "code"
+        ],
+        [
+          "Quote number",
+          "code"
+        ],
+        [
+          "Shipper",
+          "party"
+        ],
+        [
+          "Shipper rate",
+          "currency"
+        ],
+        [
+          "Accessorial charges",
+          "currency"
+        ],
+        [
+          "Invoice total",
+          "currency"
+        ],
+        [
+          "Invoice date",
+          "date"
+        ]
+      ]
+    ],
+    [
+      "remittance",
+      "Shipper Remittance",
+      "SHIPPER_REMITTANCE",
+      "Shipper AP's payment advice, traced by the broker until cash arrives.",
+      [
+        [
+          "Shipper invoice number",
+          "code"
+        ],
+        [
+          "PO number",
+          "code"
+        ],
+        [
+          "Invoice total",
+          "currency"
+        ],
+        [
+          "Amount paid",
+          "currency"
+        ],
+        [
+          "Payment date",
+          "date"
+        ]
+      ]
+    ]
+  ],
+  "matches": [
+    [
+      "quote",
+      "Shipper",
+      [
+        [
+          "tender",
+          "Shipper"
+        ]
+      ]
+    ],
+    [
+      "quote",
+      "Origin address",
+      [
+        [
+          "tender",
+          "Origin address"
+        ]
+      ]
+    ],
+    [
+      "quote",
+      "Destination address",
+      [
+        [
+          "tender",
+          "Destination address"
+        ]
+      ]
+    ],
+    [
+      "quote",
+      "Equipment type",
+      [
+        [
+          "tender",
+          "Equipment type"
+        ]
+      ]
+    ],
+    [
+      "po",
+      "Quote number",
+      [
+        [
+          "quote",
+          "Quote number"
+        ]
+      ]
+    ],
+    [
+      "po",
+      "Shipper",
+      [
+        [
+          "quote",
+          "Shipper"
+        ]
+      ]
+    ],
+    [
+      "po",
+      "Origin address",
+      [
+        [
+          "tender",
+          "Origin address"
+        ]
+      ]
+    ],
+    [
+      "po",
+      "Destination address",
+      [
+        [
+          "tender",
+          "Destination address"
+        ]
+      ]
+    ],
+    [
+      "po",
+      "Pickup date",
+      [
+        [
+          "tender",
+          "Pickup date"
+        ]
+      ]
+    ],
+    [
+      "po",
+      "Commodity",
+      [
+        [
+          "tender",
+          "Commodity"
+        ]
+      ]
+    ],
+    [
+      "po",
+      "Weight",
+      [
+        [
+          "tender",
+          "Weight"
+        ]
+      ]
+    ],
+    [
+      "po",
+      "Shipper rate",
+      [
+        [
+          "quote",
+          "Shipper rate"
+        ]
+      ]
+    ],
+    [
+      "load",
+      "PO number",
+      [
+        [
+          "po",
+          "PO number"
+        ]
+      ]
+    ],
+    [
+      "load",
+      "Shipper",
+      [
+        [
+          "po",
+          "Shipper"
+        ]
+      ]
+    ],
+    [
+      "load",
+      "Origin address",
+      [
+        [
+          "po",
+          "Origin address"
+        ]
+      ]
+    ],
+    [
+      "load",
+      "Destination address",
+      [
+        [
+          "po",
+          "Destination address"
+        ]
+      ]
+    ],
+    [
+      "load",
+      "Equipment type",
+      [
+        [
+          "tender",
+          "Equipment type"
+        ]
+      ]
+    ],
+    [
+      "load",
+      "Shipper rate",
+      [
+        [
+          "po",
+          "Shipper rate"
+        ]
+      ]
+    ],
+    [
+      "ratecon",
+      "Load number",
+      [
+        [
+          "load",
+          "Load number"
+        ]
+      ]
+    ],
+    [
+      "ratecon",
+      "PO number",
+      [
+        [
+          "po",
+          "PO number"
+        ]
+      ]
+    ],
+    [
+      "ratecon",
+      "Carrier name",
+      [
+        [
+          "carrier",
+          "Carrier name"
+        ]
+      ]
+    ],
+    [
+      "ratecon",
+      "MC number",
+      [
+        [
+          "carrier",
+          "MC number"
+        ]
+      ]
+    ],
+    [
+      "ratecon",
+      "Origin address",
+      [
+        [
+          "load",
+          "Origin address"
+        ]
+      ]
+    ],
+    [
+      "ratecon",
+      "Destination address",
+      [
+        [
+          "load",
+          "Destination address"
+        ]
+      ]
+    ],
+    [
+      "ratecon",
+      "Pickup appointment",
+      [
+        [
+          "load",
+          "Pickup appointment"
+        ]
+      ]
+    ],
+    [
+      "ratecon",
+      "Delivery appointment",
+      [
+        [
+          "load",
+          "Delivery appointment"
+        ]
+      ]
+    ],
+    [
+      "ratecon",
+      "Commodity",
+      [
+        [
+          "tender",
+          "Commodity"
+        ]
+      ]
+    ],
+    [
+      "ratecon",
+      "Weight",
+      [
+        [
+          "tender",
+          "Weight"
+        ]
+      ]
+    ],
+    [
+      "ratecon",
+      "Piece count",
+      [
+        [
+          "tender",
+          "Piece count"
+        ]
+      ]
+    ],
+    [
+      "ratecon",
+      "Equipment type",
+      [
+        [
+          "load",
+          "Equipment type"
+        ]
+      ]
+    ],
+    [
+      "bol",
+      "Load number",
+      [
+        [
+          "ratecon",
+          "Load number"
+        ]
+      ]
+    ],
+    [
+      "bol",
+      "PO number",
+      [
+        [
+          "po",
+          "PO number"
+        ]
+      ]
+    ],
+    [
+      "bol",
+      "Shipper",
+      [
+        [
+          "load",
+          "Shipper"
+        ]
+      ]
+    ],
+    [
+      "bol",
+      "Consignee",
+      [
+        [
+          "tender",
+          "Consignee"
+        ]
+      ]
+    ],
+    [
+      "bol",
+      "Carrier name",
+      [
+        [
+          "ratecon",
+          "Carrier name"
+        ]
+      ]
+    ],
+    [
+      "bol",
+      "Commodity",
+      [
+        [
+          "ratecon",
+          "Commodity"
+        ]
+      ]
+    ],
+    [
+      "bol",
+      "Weight",
+      [
+        [
+          "ratecon",
+          "Weight"
+        ]
+      ]
+    ],
+    [
+      "bol",
+      "Piece count",
+      [
+        [
+          "ratecon",
+          "Piece count"
+        ]
+      ]
+    ],
+    [
+      "bol",
+      "Special instructions",
+      [
+        [
+          "tender",
+          "Special instructions"
+        ]
+      ]
+    ],
+    [
+      "tracking",
+      "Load number",
+      [
+        [
+          "ratecon",
+          "Load number"
+        ]
+      ]
+    ],
+    [
+      "tracking",
+      "Pickup arrival time",
+      [
+        [
+          "bol",
+          "Pickup arrival time"
+        ]
+      ]
+    ],
+    [
+      "tracking",
+      "Pickup departure time",
+      [
+        [
+          "bol",
+          "Pickup departure time"
+        ]
+      ]
+    ],
+    [
+      "lumper",
+      "Load number",
+      [
+        [
+          "ratecon",
+          "Load number"
+        ]
+      ]
+    ],
+    [
+      "pod",
+      "BOL number",
+      [
+        [
+          "bol",
+          "BOL number"
+        ]
+      ]
+    ],
+    [
+      "pod",
+      "Load number",
+      [
+        [
+          "ratecon",
+          "Load number"
+        ]
+      ]
+    ],
+    [
+      "pod",
+      "Consignee",
+      [
+        [
+          "bol",
+          "Consignee"
+        ]
+      ]
+    ],
+    [
+      "pod",
+      "Piece count",
+      [
+        [
+          "bol",
+          "Piece count"
+        ]
+      ]
+    ],
+    [
+      "pod",
+      "Delivery arrival time",
+      [
+        [
+          "tracking",
+          "Delivery arrival time"
+        ]
+      ]
+    ],
+    [
+      "carrier_inv",
+      "Load number",
+      [
+        [
+          "ratecon",
+          "Load number"
+        ]
+      ]
+    ],
+    [
+      "carrier_inv",
+      "Carrier name",
+      [
+        [
+          "ratecon",
+          "Carrier name"
+        ]
+      ]
+    ],
+    [
+      "carrier_inv",
+      "MC number",
+      [
+        [
+          "ratecon",
+          "MC number"
+        ],
+        [
+          "carrier",
+          "MC number"
+        ]
+      ]
+    ],
+    [
+      "carrier_inv",
+      "Remit-to",
+      [
+        [
+          "carrier",
+          "Remit-to"
+        ]
+      ]
+    ],
+    [
+      "carrier_inv",
+      "Linehaul rate",
+      [
+        [
+          "ratecon",
+          "Linehaul rate"
+        ]
+      ]
+    ],
+    [
+      "carrier_inv",
+      "Fuel surcharge",
+      [
+        [
+          "ratecon",
+          "Fuel surcharge"
+        ]
+      ]
+    ],
+    [
+      "carrier_inv",
+      "Lumper amount",
+      [
+        [
+          "lumper",
+          "Lumper amount"
+        ]
+      ]
+    ],
+    [
+      "carrier_inv",
+      "Extra stop fee",
+      [
+        [
+          "ratecon",
+          "Extra stop fee"
+        ]
+      ]
+    ],
+    [
+      "carrier_inv",
+      "TONU fee",
+      [
+        [
+          "ratecon",
+          "TONU fee"
+        ]
+      ]
+    ],
+    [
+      "carrier_pay",
+      "Load number",
+      [
+        [
+          "carrier_inv",
+          "Load number"
+        ]
+      ]
+    ],
+    [
+      "carrier_pay",
+      "Carrier invoice number",
+      [
+        [
+          "carrier_inv",
+          "Carrier invoice number"
+        ]
+      ]
+    ],
+    [
+      "carrier_pay",
+      "Remit-to",
+      [
+        [
+          "carrier_inv",
+          "Remit-to"
+        ]
+      ]
+    ],
+    [
+      "carrier_pay",
+      "Amount due",
+      [
+        [
+          "carrier_inv",
+          "Amount due"
+        ]
+      ]
+    ],
+    [
+      "carrier_pay",
+      "Payment terms",
+      [
+        [
+          "ratecon",
+          "Payment terms"
+        ]
+      ]
+    ],
+    [
+      "shipper_inv",
+      "PO number",
+      [
+        [
+          "po",
+          "PO number"
+        ]
+      ]
+    ],
+    [
+      "shipper_inv",
+      "Load number",
+      [
+        [
+          "load",
+          "Load number"
+        ]
+      ]
+    ],
+    [
+      "shipper_inv",
+      "Quote number",
+      [
+        [
+          "quote",
+          "Quote number"
+        ]
+      ]
+    ],
+    [
+      "shipper_inv",
+      "Shipper",
+      [
+        [
+          "po",
+          "Shipper"
+        ]
+      ]
+    ],
+    [
+      "shipper_inv",
+      "Shipper rate",
+      [
+        [
+          "po",
+          "Shipper rate"
+        ]
+      ]
+    ],
+    [
+      "remittance",
+      "Shipper invoice number",
+      [
+        [
+          "shipper_inv",
+          "Shipper invoice number"
+        ]
+      ]
+    ],
+    [
+      "remittance",
+      "PO number",
+      [
+        [
+          "po",
+          "PO number"
+        ]
+      ]
+    ],
+    [
+      "remittance",
+      "Invoice total",
+      [
+        [
+          "shipper_inv",
+          "Invoice total"
+        ]
+      ]
+    ]
+  ],
+  "journey": {
+    "title": "FTL load — tender to margin",
+    "description": "Brokered full-truckload lifecycle: 27 steps from shipper tender to closing the load, grouped into 7 segments.",
+    "segments": [
+      [
+        "Tender & quote (steps 1–2)",
+        [
+          "tender",
+          "quote"
+        ]
+      ],
+      [
+        "Order & load setup (steps 3–4)",
+        [
+          "po",
+          "load"
+        ]
+      ],
+      [
+        "Carrier sourcing & booking (steps 5–8)",
+        [
+          "carrier",
+          "ratecon"
+        ]
+      ],
+      [
+        "Pickup (steps 9–11)",
+        [
+          "bol"
+        ]
+      ],
+      [
+        "In transit & delivery (steps 12–15)",
+        [
+          "tracking",
+          "lumper",
+          "pod"
+        ]
+      ],
+      [
+        "Carrier settlement (steps 16–22)",
+        [
+          "carrier_inv",
+          "carrier_pay"
+        ]
+      ],
+      [
+        "Shipper billing & close (steps 23–27)",
+        [
+          "shipper_inv",
+          "remittance"
+        ]
+      ]
+    ]
+  }
+}

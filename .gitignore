@@ -11,3 +11,6 @@ wheels/
 .env
 .pytest_cache/
 .ruff_cache/
+
+# Uploaded files (local storage)
+uploads/

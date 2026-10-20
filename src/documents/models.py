@@ -13,8 +13,8 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database.base import Base, CreatedAtMixin, TimestampMixin, pg_enum
+from src.document_skeletons.enums import FieldType
 from src.documents.enums import DocumentStatus
-from src.templates.enums import FieldType
 
 
 class Document(TimestampMixin, Base):
@@ -34,8 +34,8 @@ class Document(TimestampMixin, Base):
         ForeignKey("segments.id", ondelete="CASCADE"), index=True
     )
     # Source skeleton; kept for match resolution, nulled if the skeleton is deleted
-    template_id: Mapped[int | None] = mapped_column(
-        ForeignKey("document_templates.id", ondelete="SET NULL"), index=True
+    document_skeleton_id: Mapped[int | None] = mapped_column(
+        ForeignKey("document_skeletons.id", ondelete="SET NULL"), index=True
     )
     title: Mapped[str] = mapped_column(String(200))
     document_type: Mapped[str] = mapped_column(String(100))
@@ -54,8 +54,8 @@ class DocumentField(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     document_id: Mapped[int] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"))
-    template_field_id: Mapped[int | None] = mapped_column(
-        ForeignKey("document_template_fields.id", ondelete="SET NULL")
+    document_skeleton_field_id: Mapped[int | None] = mapped_column(
+        ForeignKey("document_skeleton_fields.id", ondelete="SET NULL")
     )
     name: Mapped[str] = mapped_column(String(150))
     type: Mapped[FieldType] = mapped_column(pg_enum(FieldType, "field_type_enum"))
@@ -71,17 +71,17 @@ class DocumentFieldMatchRule(Base):
 
     __tablename__ = "document_field_match_rules"
     __table_args__ = (
-        UniqueConstraint("document_field_id", "target_template_id", "target_field_name"),
+        UniqueConstraint("document_field_id", "target_document_skeleton_id", "target_field_name"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     document_field_id: Mapped[int] = mapped_column(
         ForeignKey("document_fields.id", ondelete="CASCADE")
     )
-    target_template_id: Mapped[int | None] = mapped_column(
-        ForeignKey("document_templates.id", ondelete="SET NULL"), index=True
+    target_document_skeleton_id: Mapped[int | None] = mapped_column(
+        ForeignKey("document_skeletons.id", ondelete="SET NULL"), index=True
     )
-    target_template_title: Mapped[str] = mapped_column(String(200))
+    target_document_skeleton_title: Mapped[str] = mapped_column(String(200))
     target_field_name: Mapped[str] = mapped_column(String(150))
 
 

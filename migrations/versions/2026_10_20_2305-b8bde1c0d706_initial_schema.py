@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: 6b9c77001907
+Revision ID: b8bde1c0d706
 Revises:
-Create Date: 2026-10-18 17:58:07.089120
+Create Date: 2026-10-20 23:05:24.747646
 
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "6b9c77001907"
+revision: str = "b8bde1c0d706"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -42,7 +42,7 @@ def upgrade() -> None:
         sa.UniqueConstraint("name", name=op.f("uq_companies_name")),
     )
     op.create_table(
-        "document_templates",
+        "document_skeletons",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("company_id", sa.Integer(), nullable=False),
         sa.Column("title", sa.String(length=200), nullable=False),
@@ -63,13 +63,13 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["company_id"],
             ["companies.id"],
-            name=op.f("fk_document_templates_company_id_companies"),
+            name=op.f("fk_document_skeletons_company_id_companies"),
             ondelete="CASCADE",
         ),
-        sa.PrimaryKeyConstraint("id", name=op.f("pk_document_templates")),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_document_skeletons")),
     )
     op.create_index(
-        op.f("ix_document_templates_company_id"), "document_templates", ["company_id"], unique=False
+        op.f("ix_document_skeletons_company_id"), "document_skeletons", ["company_id"], unique=False
     )
     op.create_table(
         "journeys",
@@ -144,9 +144,9 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_users_company_id"), "users", ["company_id"], unique=False)
     op.create_table(
-        "document_template_fields",
+        "document_skeleton_fields",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("template_id", sa.Integer(), nullable=False),
+        sa.Column("document_skeleton_id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(length=150), nullable=False),
         sa.Column(
             "type",
@@ -164,14 +164,16 @@ def upgrade() -> None:
         ),
         sa.Column("position", sa.Integer(), server_default="0", nullable=False),
         sa.ForeignKeyConstraint(
-            ["template_id"],
-            ["document_templates.id"],
-            name=op.f("fk_document_template_fields_template_id_document_templates"),
+            ["document_skeleton_id"],
+            ["document_skeletons.id"],
+            name=op.f("fk_document_skeleton_fields_document_skeleton_id_document_skeletons"),
             ondelete="CASCADE",
         ),
-        sa.PrimaryKeyConstraint("id", name=op.f("pk_document_template_fields")),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_document_skeleton_fields")),
         sa.UniqueConstraint(
-            "template_id", "name", name=op.f("uq_document_template_fields_template_id")
+            "document_skeleton_id",
+            "name",
+            name=op.f("uq_document_skeleton_fields_document_skeleton_id"),
         ),
     )
     op.create_table(
@@ -196,31 +198,31 @@ def upgrade() -> None:
         sa.UniqueConstraint("journey_id", "name", name=op.f("uq_segments_journey_id")),
     )
     op.create_table(
-        "document_template_field_matches",
+        "document_skeleton_field_matches",
         sa.Column("field_id", sa.Integer(), nullable=False),
         sa.Column("match_field_id", sa.Integer(), nullable=False),
         sa.CheckConstraint(
-            "field_id <> match_field_id", name=op.f("ck_document_template_field_matches_not_self")
+            "field_id <> match_field_id", name=op.f("ck_document_skeleton_field_matches_not_self")
         ),
         sa.ForeignKeyConstraint(
             ["field_id"],
-            ["document_template_fields.id"],
-            name=op.f("fk_document_template_field_matches_field_id_document_template_fields"),
+            ["document_skeleton_fields.id"],
+            name=op.f("fk_document_skeleton_field_matches_field_id_document_skeleton_fields"),
             ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
             ["match_field_id"],
-            ["document_template_fields.id"],
-            name=op.f("fk_document_template_field_matches_match_field_id_document_template_fields"),
+            ["document_skeleton_fields.id"],
+            name=op.f("fk_document_skeleton_field_matches_match_field_id_document_skeleton_fields"),
             ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint(
-            "field_id", "match_field_id", name=op.f("pk_document_template_field_matches")
+            "field_id", "match_field_id", name=op.f("pk_document_skeleton_field_matches")
         ),
     )
     op.create_index(
-        op.f("ix_document_template_field_matches_match_field_id"),
-        "document_template_field_matches",
+        op.f("ix_document_skeleton_field_matches_match_field_id"),
+        "document_skeleton_field_matches",
         ["match_field_id"],
         unique=False,
     )
@@ -229,7 +231,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("journey_id", sa.Integer(), nullable=False),
         sa.Column("segment_id", sa.Integer(), nullable=False),
-        sa.Column("template_id", sa.Integer(), nullable=True),
+        sa.Column("document_skeleton_id", sa.Integer(), nullable=True),
         sa.Column("title", sa.String(length=200), nullable=False),
         sa.Column("document_type", sa.String(length=100), nullable=False),
         sa.Column("position", sa.Integer(), server_default="0", nullable=False),
@@ -252,6 +254,12 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.ForeignKeyConstraint(
+            ["document_skeleton_id"],
+            ["document_skeletons.id"],
+            name=op.f("fk_documents_document_skeleton_id_document_skeletons"),
+            ondelete="SET NULL",
+        ),
+        sa.ForeignKeyConstraint(
             ["journey_id"],
             ["journeys.id"],
             name=op.f("fk_documents_journey_id_journeys"),
@@ -263,22 +271,21 @@ def upgrade() -> None:
             name=op.f("fk_documents_segment_id_segments"),
             ondelete="CASCADE",
         ),
-        sa.ForeignKeyConstraint(
-            ["template_id"],
-            ["document_templates.id"],
-            name=op.f("fk_documents_template_id_document_templates"),
-            ondelete="SET NULL",
-        ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_documents")),
+    )
+    op.create_index(
+        op.f("ix_documents_document_skeleton_id"),
+        "documents",
+        ["document_skeleton_id"],
+        unique=False,
     )
     op.create_index(op.f("ix_documents_journey_id"), "documents", ["journey_id"], unique=False)
     op.create_index(op.f("ix_documents_segment_id"), "documents", ["segment_id"], unique=False)
-    op.create_index(op.f("ix_documents_template_id"), "documents", ["template_id"], unique=False)
     op.create_table(
         "document_fields",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("document_id", sa.Integer(), nullable=False),
-        sa.Column("template_field_id", sa.Integer(), nullable=True),
+        sa.Column("document_skeleton_field_id", sa.Integer(), nullable=True),
         sa.Column("name", sa.String(length=150), nullable=False),
         sa.Column(
             "type",
@@ -302,9 +309,9 @@ def upgrade() -> None:
             ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
-            ["template_field_id"],
-            ["document_template_fields.id"],
-            name=op.f("fk_document_fields_template_field_id_document_template_fields"),
+            ["document_skeleton_field_id"],
+            ["document_skeleton_fields.id"],
+            name=op.f("fk_document_fields_document_skeleton_field_id_document_skeleton_fields"),
             ondelete="SET NULL",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_document_fields")),
@@ -346,8 +353,8 @@ def upgrade() -> None:
         "document_field_match_rules",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("document_field_id", sa.Integer(), nullable=False),
-        sa.Column("target_template_id", sa.Integer(), nullable=True),
-        sa.Column("target_template_title", sa.String(length=200), nullable=False),
+        sa.Column("target_document_skeleton_id", sa.Integer(), nullable=True),
+        sa.Column("target_document_skeleton_title", sa.String(length=200), nullable=False),
         sa.Column("target_field_name", sa.String(length=150), nullable=False),
         sa.ForeignKeyConstraint(
             ["document_field_id"],
@@ -356,23 +363,25 @@ def upgrade() -> None:
             ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
-            ["target_template_id"],
-            ["document_templates.id"],
-            name=op.f("fk_document_field_match_rules_target_template_id_document_templates"),
+            ["target_document_skeleton_id"],
+            ["document_skeletons.id"],
+            name=op.f(
+                "fk_document_field_match_rules_target_document_skeleton_id_document_skeletons"
+            ),
             ondelete="SET NULL",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_document_field_match_rules")),
         sa.UniqueConstraint(
             "document_field_id",
-            "target_template_id",
+            "target_document_skeleton_id",
             "target_field_name",
             name=op.f("uq_document_field_match_rules_document_field_id"),
         ),
     )
     op.create_index(
-        op.f("ix_document_field_match_rules_target_template_id"),
+        op.f("ix_document_field_match_rules_target_document_skeleton_id"),
         "document_field_match_rules",
-        ["target_template_id"],
+        ["target_document_skeleton_id"],
         unique=False,
     )
     op.create_table(
@@ -414,34 +423,33 @@ def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table("document_field_values")
     op.drop_index(
-        op.f("ix_document_field_match_rules_target_template_id"),
+        op.f("ix_document_field_match_rules_target_document_skeleton_id"),
         table_name="document_field_match_rules",
     )
     op.drop_table("document_field_match_rules")
     op.drop_index(op.f("ix_uploaded_files_document_id"), table_name="uploaded_files")
     op.drop_table("uploaded_files")
     op.drop_table("document_fields")
-    op.drop_index(op.f("ix_documents_template_id"), table_name="documents")
     op.drop_index(op.f("ix_documents_segment_id"), table_name="documents")
     op.drop_index(op.f("ix_documents_journey_id"), table_name="documents")
+    op.drop_index(op.f("ix_documents_document_skeleton_id"), table_name="documents")
     op.drop_table("documents")
     op.drop_index(
-        op.f("ix_document_template_field_matches_match_field_id"),
-        table_name="document_template_field_matches",
+        op.f("ix_document_skeleton_field_matches_match_field_id"),
+        table_name="document_skeleton_field_matches",
     )
-    op.drop_table("document_template_field_matches")
+    op.drop_table("document_skeleton_field_matches")
     op.drop_table("segments")
-    op.drop_table("document_template_fields")
+    op.drop_table("document_skeleton_fields")
     op.drop_index(op.f("ix_users_company_id"), table_name="users")
     op.drop_table("users")
     op.drop_index(op.f("ix_journeys_company_id"), table_name="journeys")
     op.drop_table("journeys")
-    op.drop_index(op.f("ix_document_templates_company_id"), table_name="document_templates")
-    op.drop_table("document_templates")
+    op.drop_index(op.f("ix_document_skeletons_company_id"), table_name="document_skeletons")
+    op.drop_table("document_skeletons")
     op.drop_table("companies")
     # ### end Alembic commands ###
-
-    # Added by hand: autogenerate doesn't drop PostgreSQL enum types
+    # Alembic doesn't drop PostgreSQL enum types; without this a re-upgrade fails
     op.execute("DROP TYPE IF EXISTS document_status_enum")
     op.execute("DROP TYPE IF EXISTS field_type_enum")
     op.execute("DROP TYPE IF EXISTS user_role_enum")

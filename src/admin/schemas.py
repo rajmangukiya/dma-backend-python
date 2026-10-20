@@ -1,6 +1,6 @@
-from src.common.schemas import CamelModel
+from src.common.schemas import CamelModel, PatchRequest
 from src.companies.schemas import CompanyName, CompanyRead
-from src.users.schemas import AtLeastOneField, CompanyRole, Password, PublicUser, Username
+from src.users.schemas import CompanyRole, Password, PublicUser, Username
 
 
 class PlatformStats(CamelModel):
@@ -31,12 +31,12 @@ class CreateCompanyRequest(CamelModel):
     admin_password: Password
 
 
-class UpdateCompanyRequest(AtLeastOneField):
+class UpdateCompanyRequest(PatchRequest):
     name: CompanyName | None = None
     is_active: bool | None = None
 
 
-class UpdateCompanyUserRequest(AtLeastOneField):
+class UpdateCompanyUserRequest(PatchRequest):
     """The super admin can also set a new password in the same request."""
 
     role: CompanyRole | None = None

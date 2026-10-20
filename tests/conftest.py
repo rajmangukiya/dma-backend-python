@@ -6,10 +6,13 @@ emptied before every test.
 
 import asyncio
 import os
+import tempfile
 
 # Must run before `app` is imported: settings are read (and cached) on first use
 os.environ["ENVIRONMENT"] = "test"
 os.environ["DATABASE_URL"] = "postgresql+asyncpg://postgres:postgres@localhost:5432/dma_py_test"
+os.environ["EXTRACTION_DELAY_MS"] = "0"
+os.environ["UPLOAD_DIR"] = tempfile.mkdtemp(prefix="dma-test-uploads-")
 
 from collections.abc import AsyncIterator  # noqa: E402
 

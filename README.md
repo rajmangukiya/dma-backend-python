@@ -17,7 +17,7 @@ Python rewrite of `dma-backend`. Stack: see [tech-stack.md](tech-stack.md).
 | Undo the last migration | `uv run alembic downgrade -1` | `typeorm migration:revert` |
 | Show current / history | `uv run alembic current` · `uv run alembic history` | — |
 | Create the super admin (from `.env`) | `uv run python -m scripts.seed_super_admin` | `npm run seed:super-admin` |
-| Create the demo company + users | `uv run python -m scripts.seed_demo` | `npm run seed:demo` |
+| Create the demo company, users, skeletons + journey | `uv run python -m scripts.seed_demo` (`--replace-skeletons` to reload) | `npm run seed:demo` |
 
 - API: http://localhost:8000/api/health
 - Interactive docs (generated from the code): http://localhost:8000/docs
@@ -34,7 +34,7 @@ uv.lock               # package-lock.json — commit it
 alembic.ini           # Alembic settings (file naming, Ruff hooks); DB URL comes from .env
 migrations/
   env.py              # connects Alembic to app settings + Base.metadata
-  script.py.mako      # template for new migration files
+  script.py.mako      # blueprint Alembic fills in for each new migration file
   versions/           # the migration files themselves
 src/
   main.py             # creates the app: CORS, error handlers, mounts the API under /api
@@ -72,12 +72,35 @@ src/
     views.py          # /api/admin — stats, companies, company users (super admin)
     flows.py          # stats, list with counts, create company + its first admin
     schemas.py        # PlatformStats, CompanyListItem, CompanyDetail, admin requests
-  templates/          # models.py (3 skeleton tables), enums.py (FieldType) — API in step 3
-  journeys/           # models.py, service.py (counts so far) — API in step 4
-  documents/          # models.py, enums.py, service.py (counts so far) — API in steps 4–5
+  document_skeletons/ # document skeletons (URL: /api/document-skeletons)
+    models.py         # DocumentSkeleton, DocumentSkeletonField, DocumentSkeletonFieldMatch
+    enums.py          # FieldType
+    service.py        # skeleton/field/match reads + writes, detail view, match candidates
+    flows.py          # list with counts (needs documents for "used in N journeys")
+    schemas.py
+    views.py          # /api/document-skeletons
+  journeys/           # journeys and their segments
+    models.py         # journeys, segments
+    service.py        # journey + segment reads/writes (segment names unique per journey)
+    flows.py          # list with status, journey detail (+ matching), delete with files, add document
+    schemas.py
+    views.py          # /api/journeys and /api/segments
+  documents/          # documents placed in journeys
+    models.py         # documents, field snapshots, match rule snapshots, values, uploaded files
+    enums.py          # DocumentStatus
+    service.py        # reads/writes, snapshot from a skeleton, journey graph, values, files
+    matching.py       # pure one-way matching (no DB): JourneyMatcher, normalize()
+    extraction.py     # background extraction runner (asyncio tasks, versioned re-runs)
+    flows.py          # document detail, uploads, file removal, values entered by hand
+    schemas.py
+    views.py          # /api/documents
+  integrations/       # outside services behind small interfaces (§11)
+    storage.py        # FileStorage protocol + LocalStorage (uploads/), S3 later
+    extraction.py     # Extractor protocol + DummyExtractor, AI later
 scripts/
   seed_super_admin.py
-  seed_demo.py
+  seed_demo.py        # demo company, users, 14 freight skeletons, 71 match rules, one journey
+  demo_data.json      # the skeletons/rules/journey (exported from the Node seed)
 tests/
   conftest.py         # test database, per-test cleanup, client fixture, factories
   test_health.py
@@ -85,6 +108,8 @@ tests/
   test_auth.py
   test_users.py       # /api/users
   test_admin.py       # /api/admin
+  test_document_skeletons.py  # /api/document-skeletons
+  test_journeys.py    # journeys, segments, documents, uploads, extraction, matching
 ```
 
 Every folder with Python files has an `__init__.py`, which marks it as a package so it can be imported (`from src.common.config import ...`).
@@ -178,6 +203,23 @@ Conventions come from `~/Desktop/Projects/docs/backend/A-architecture.md` and `M
 - **`db.refresh(obj)`**: reloading values the database set (`server_default`, `onupdate`) — needed in async, where lazy loading isn't allowed
 - **Why one `AsyncSession` can't run queries concurrently** (no `asyncio.gather` on the same session)
 - **The walrus operator** `:=` (`if password := changes.pop("password", None):`)
+
+## Skeletons, journeys, documents — what to look up
+
+
+
+- **File uploads in FastAPI**: `UploadFile`, `File()`, `multipart/form-data` (needs `python-multipart`, included in `fastapi[standard]`); `await upload.read()`
+- **`FileResponse`**: streaming a file from disk; `filename=` sets `Content-Disposition`
+- **`asyncio.create_task`**: running work after the response; why tasks must be kept referenced; `task.cancel()` and `CancelledError`
+- **Why the background task opens its own session** (the request's session is closed when the response is sent)
+- **`typing.Protocol`**: interfaces without inheritance (`FileStorage`, `Extractor`)
+- **`dataclasses`** vs Pydantic models: plain data inside the app (`JourneyGraph`, `FieldRow`) vs validated API shapes
+- **`ClassVar`** on Pydantic models (`nullable` on PATCH bodies)
+- **`match` / `case`** (structural pattern matching) in `DummyExtractor`
+- **Postgres upsert**: `insert(...).on_conflict_do_update(...)` from `sqlalchemy.dialects.postgresql`
+- **`db.flush()` vs `db.commit()`**: getting generated ids inside one transaction (`create_from_skeleton`)
+- **Aggregates**: `func.count().filter(...)`, `func.count(func.distinct(...))`, `.exists()` subqueries
+- **`pathlib`**: `Path.resolve()`, `is_relative_to()` — keeping storage keys inside the upload folder
 
 ## Project structure — what to look up
 

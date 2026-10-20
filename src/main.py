@@ -8,6 +8,7 @@ import src.database.models  # noqa: F401  (registers every table, so cross-modul
 from src.common.config import get_settings
 from src.common.errors import register_error_handlers
 from src.database.session import engine
+from src.documents.extraction import extraction_runner
 from src.router import api_router
 
 settings = get_settings()
@@ -15,7 +16,9 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    await extraction_runner.resume_interrupted()  # documents left "extracting" by a restart
     yield
+    await extraction_runner.shutdown()
     await engine.dispose()  # close pooled database connections
 
 

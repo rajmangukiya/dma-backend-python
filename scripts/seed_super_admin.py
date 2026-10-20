@@ -7,6 +7,7 @@ import asyncio
 
 from src.common.config import get_settings
 from src.common.passwords import hash_password
+from src.database import models  # noqa: F401  (registers every table)
 from src.database.session import SessionLocal, engine
 from src.users.enums import UserRole
 from src.users.models import User

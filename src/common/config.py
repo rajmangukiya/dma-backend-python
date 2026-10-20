@@ -28,6 +28,12 @@ class Settings(BaseSettings):
     jwt_access_expires_minutes: int = 15
     jwt_refresh_expires_days: int = 7
 
+    # Uploaded files: local folder for now (S3 later); limits match the Node API
+    upload_dir: str = "uploads"
+    max_upload_size_mb: int = 25
+    # Pause before the (dummy) extraction runs, so the UI can show "extracting"
+    extraction_delay_ms: int = 1500
+
     # Used by `python -m scripts.seed_super_admin`
     super_admin_username: str | None = None
     super_admin_password: str | None = Field(default=None, min_length=8)

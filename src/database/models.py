@@ -5,6 +5,11 @@ test setup need that to see the whole schema.
 """
 
 from src.companies.models import Company
+from src.document_skeletons.models import (
+    DocumentSkeleton,
+    DocumentSkeletonField,
+    DocumentSkeletonFieldMatch,
+)
 from src.documents.models import (
     Document,
     DocumentField,
@@ -13,11 +18,6 @@ from src.documents.models import (
     UploadedFile,
 )
 from src.journeys.models import Journey, Segment
-from src.templates.models import (
-    DocumentTemplate,
-    DocumentTemplateField,
-    DocumentTemplateFieldMatch,
-)
 from src.users.models import User
 
 __all__ = [
@@ -26,9 +26,9 @@ __all__ = [
     "DocumentField",
     "DocumentFieldMatchRule",
     "DocumentFieldValue",
-    "DocumentTemplate",
-    "DocumentTemplateField",
-    "DocumentTemplateFieldMatch",
+    "DocumentSkeleton",
+    "DocumentSkeletonField",
+    "DocumentSkeletonFieldMatch",
     "Journey",
     "Segment",
     "UploadedFile",

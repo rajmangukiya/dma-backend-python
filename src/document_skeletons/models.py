@@ -2,13 +2,13 @@ from sqlalchemy import CheckConstraint, ForeignKey, String, Text, UniqueConstrai
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database.base import Base, TimestampMixin, pg_enum
-from src.templates.enums import FieldType
+from src.document_skeletons.enums import FieldType
 
 
-class DocumentTemplate(TimestampMixin, Base):
+class DocumentSkeleton(TimestampMixin, Base):
     """A document skeleton: the shape of a document and its fields."""
 
-    __tablename__ = "document_templates"
+    __tablename__ = "document_skeletons"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     company_id: Mapped[int] = mapped_column(
@@ -19,30 +19,30 @@ class DocumentTemplate(TimestampMixin, Base):
     description: Mapped[str | None] = mapped_column(Text)
 
 
-class DocumentTemplateField(Base):
-    __tablename__ = "document_template_fields"
-    __table_args__ = (UniqueConstraint("template_id", "name"),)
+class DocumentSkeletonField(Base):
+    __tablename__ = "document_skeleton_fields"
+    __table_args__ = (UniqueConstraint("document_skeleton_id", "name"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    template_id: Mapped[int] = mapped_column(
-        ForeignKey("document_templates.id", ondelete="CASCADE")
+    document_skeleton_id: Mapped[int] = mapped_column(
+        ForeignKey("document_skeletons.id", ondelete="CASCADE")
     )
     name: Mapped[str] = mapped_column(String(150))
     type: Mapped[FieldType] = mapped_column(pg_enum(FieldType, "field_type_enum"))
     position: Mapped[int] = mapped_column(server_default="0")
 
 
-class DocumentTemplateFieldMatch(Base):
+class DocumentSkeletonFieldMatch(Base):
     """One-way match rule: `field` must match `match_field` (a field on another skeleton)."""
 
-    __tablename__ = "document_template_field_matches"
+    __tablename__ = "document_skeleton_field_matches"
     __table_args__ = (CheckConstraint("field_id <> match_field_id", name="not_self"),)
 
     field_id: Mapped[int] = mapped_column(
-        ForeignKey("document_template_fields.id", ondelete="CASCADE"), primary_key=True
+        ForeignKey("document_skeleton_fields.id", ondelete="CASCADE"), primary_key=True
     )
     match_field_id: Mapped[int] = mapped_column(
-        ForeignKey("document_template_fields.id", ondelete="CASCADE"),
+        ForeignKey("document_skeleton_fields.id", ondelete="CASCADE"),
         primary_key=True,
         index=True,
     )

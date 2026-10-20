@@ -2,9 +2,9 @@ import re
 from datetime import datetime
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, model_validator
+from pydantic import AfterValidator
 
-from src.common.schemas import CamelModel
+from src.common.schemas import CamelModel, PatchRequest
 from src.users.enums import UserRole
 
 _USERNAME_PATTERN = re.compile(r"^[a-z0-9._-]+$")
@@ -51,27 +51,13 @@ class PublicUser(CamelModel):
     updated_at: datetime
 
 
-class AtLeastOneField(CamelModel):
-    """Base for PATCH bodies: every field optional, but the body can't be empty."""
-
-    @model_validator(mode="after")
-    def at_least_one_field(self):
-        if not self.changes():
-            raise ValueError("At least one field is required")
-        return self
-
-    def changes(self) -> dict:
-        """Only the fields the client actually sent (null counts as not sent)."""
-        return self.model_dump(exclude_none=True)
-
-
 class CreateUserRequest(CamelModel):
     username: Username
     password: Password
     role: CompanyRole
 
 
-class UpdateUserRequest(AtLeastOneField):
+class UpdateUserRequest(PatchRequest):
     role: CompanyRole | None = None
     is_active: bool | None = None
 
