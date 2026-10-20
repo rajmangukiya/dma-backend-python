@@ -23,7 +23,7 @@ async def get_current_user(
         raise AppError.unauthorized("Authentication required")
 
     payload = decode_token(access_token, "access")
-    user = await users.get_user(db, int(payload.sub))
+    user = await users.get_user(db, payload.sub)
     if not user or not user.is_active or user.token_version != payload.token_version:
         raise AppError.unauthorized("Invalid session")
     if not await companies.is_company_active(db, user.company_id):

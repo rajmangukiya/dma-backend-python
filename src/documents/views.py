@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, UploadFile, status
 from fastapi.responses import FileResponse
@@ -24,7 +25,7 @@ can_manage = [Depends(require(Permission.MANAGE_JOURNEYS))]
 can_edit_data = [Depends(require(Permission.MANAGE_DOCUMENT_DATA))]
 
 
-async def _load(db: DbSession, company_id: int, document_id: int) -> tuple[Document, Journey]:
+async def _load(db: DbSession, company_id: UUID, document_id: UUID) -> tuple[Document, Journey]:
     """The document and its journey; 404 unless the journey belongs to the company."""
     document = await service.get_document(db, document_id)
     journey = document and await journeys.get_journey(db, document.journey_id, company_id)
@@ -33,7 +34,7 @@ async def _load(db: DbSession, company_id: int, document_id: int) -> tuple[Docum
     return document, journey
 
 
-async def _load_file(db: DbSession, document: Document, file_id: int) -> UploadedFile:
+async def _load_file(db: DbSession, document: Document, file_id: UUID) -> UploadedFile:
     file = await service.get_file(db, document.id, file_id)
     if not file:
         raise AppError.not_found("File not found")
@@ -42,7 +43,7 @@ async def _load_file(db: DbSession, document: Document, file_id: int) -> Uploade
 
 @router.get("/{document_id}", dependencies=can_view)
 async def get_document(
-    document_id: int, db: DbSession, company_id: CurrentCompanyId
+    document_id: UUID, db: DbSession, company_id: CurrentCompanyId
 ) -> ApiResponse[DocumentDetail]:
     document, journey = await _load(db, company_id, document_id)
     return ok(await flows.document_detail(db, document, journey))
@@ -50,7 +51,7 @@ async def get_document(
 
 @router.delete("/{document_id}", dependencies=can_manage)
 async def delete_document(
-    document_id: int, db: DbSession, company_id: CurrentCompanyId
+    document_id: UUID, db: DbSession, company_id: CurrentCompanyId
 ) -> ApiResponse[JourneyDetail]:
     document, journey = await _load(db, company_id, document_id)
     await flows.delete_document(db, document, journey)
@@ -62,7 +63,7 @@ async def delete_document(
     "/{document_id}/files", dependencies=can_edit_data, status_code=status.HTTP_201_CREATED
 )
 async def upload_files(
-    document_id: int,
+    document_id: UUID,
     db: DbSession,
     company_id: CurrentCompanyId,
     user: CurrentUser,
@@ -76,7 +77,7 @@ async def upload_files(
 
 @router.get("/{document_id}/files/{file_id}/download", dependencies=can_view)
 async def download_file(
-    document_id: int, file_id: int, db: DbSession, company_id: CurrentCompanyId
+    document_id: UUID, file_id: UUID, db: DbSession, company_id: CurrentCompanyId
 ) -> FileResponse:
     document, _ = await _load(db, company_id, document_id)
     file = await _load_file(db, document, file_id)
@@ -89,7 +90,7 @@ async def download_file(
 
 @router.delete("/{document_id}/files/{file_id}", dependencies=can_edit_data)
 async def delete_file(
-    document_id: int, file_id: int, db: DbSession, company_id: CurrentCompanyId
+    document_id: UUID, file_id: UUID, db: DbSession, company_id: CurrentCompanyId
 ) -> ApiResponse[DocumentDetail]:
     document, journey = await _load(db, company_id, document_id)
     file = await _load_file(db, document, file_id)
@@ -99,8 +100,8 @@ async def delete_file(
 
 @router.put("/{document_id}/fields/{field_id}/value", dependencies=can_edit_data)
 async def set_field_value(
-    document_id: int,
-    field_id: int,
+    document_id: UUID,
+    field_id: UUID,
     body: SetValueRequest,
     db: DbSession,
     company_id: CurrentCompanyId,

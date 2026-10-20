@@ -1,6 +1,8 @@
+import jwt
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.common.config import get_settings
 from src.users.enums import UserRole
 from tests.conftest import PASSWORD, create_company, create_user, login, make_client
 
@@ -16,8 +18,8 @@ async def test_login_sets_cookies_and_returns_session(
     assert response.status_code == 200
     data = response.json()["data"]
     assert data["username"] == "jane"
-    assert data["companyId"] == company.id  # camelCase, like the Node API
-    assert data["company"] == {"id": company.id, "name": "Acme"}
+    assert data["companyId"] == str(company.id)  # camelCase, like the Node API
+    assert data["company"] == {"id": str(company.id), "name": "Acme"}
     assert "journeys:manage" in data["permissions"]
     assert "password" not in data
     assert {"access_token", "refresh_token"} <= set(client.cookies.keys())
@@ -124,3 +126,16 @@ async def test_logout_all_ends_every_session(client: AsyncClient, db: AsyncSessi
         me = await other_device.get("/api/auth/me")
     assert me.status_code == 401
     assert me.json()["message"] == "Invalid session"
+
+
+async def test_token_with_numeric_user_id_is_rejected(client: AsyncClient) -> None:
+    """Cookies issued before ids became UUIDs must give 401, not a server error."""
+    old = jwt.encode(
+        {"sub": "2", "role": "admin", "company_id": None, "token_version": 0, "exp": 4102444800},
+        get_settings().jwt_access_secret,
+        algorithm="HS256",
+    )
+    async with make_client({"access_token": old}) as browser:
+        response = await browser.get("/api/auth/me")
+
+    assert response.status_code == 401

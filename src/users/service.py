@@ -4,6 +4,7 @@ Shared by the company admin (/users) and the super admin (/admin/companies/{id}/
 """
 
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +17,7 @@ from src.users.models import User
 # --- Reads -----------------------------------------------------------------
 
 
-async def get_user(db: AsyncSession, user_id: int) -> User | None:
+async def get_user(db: AsyncSession, user_id: UUID) -> User | None:
     return await db.get(User, user_id)
 
 
@@ -25,20 +26,20 @@ async def get_user_by_username(db: AsyncSession, username: str) -> User | None:
     return result.scalar_one_or_none()
 
 
-async def get_company_user(db: AsyncSession, company_id: int, user_id: int) -> User | None:
+async def get_company_user(db: AsyncSession, company_id: UUID, user_id: UUID) -> User | None:
     """A user, but only if they belong to `company_id`."""
     user = await get_user(db, user_id)
     return user if user and user.company_id == company_id else None
 
 
-async def list_company_users(db: AsyncSession, company_id: int) -> list[User]:
+async def list_company_users(db: AsyncSession, company_id: UUID) -> list[User]:
     result = await db.scalars(
         select(User).where(User.company_id == company_id).order_by(User.created_at)
     )
     return list(result)
 
 
-async def count_by_company(db: AsyncSession) -> dict[int, int]:
+async def count_by_company(db: AsyncSession) -> dict[UUID, int]:
     """{company_id: number of users}; companies without users are missing."""
     result = await db.execute(
         select(User.company_id, func.count())
@@ -58,7 +59,7 @@ async def count_company_users(db: AsyncSession) -> int:
     )
 
 
-async def _count_active_admins(db: AsyncSession, company_id: int) -> int:
+async def _count_active_admins(db: AsyncSession, company_id: UUID) -> int:
     return (
         await db.scalar(
             select(func.count())
@@ -73,7 +74,7 @@ async def _count_active_admins(db: AsyncSession, company_id: int) -> int:
 
 
 async def create_user(
-    db: AsyncSession, company_id: int, username: str, password: str, role: UserRole
+    db: AsyncSession, company_id: UUID, username: str, password: str, role: UserRole
 ) -> User:
     """`username` already normalised by the request schema; `password` is plain text."""
     if await get_user_by_username(db, username):
@@ -91,7 +92,7 @@ async def create_user(
 
 
 async def update_user(
-    db: AsyncSession, user: User, changes: dict[str, Any], actor_id: int | None
+    db: AsyncSession, user: User, changes: dict[str, Any], actor_id: UUID | None
 ) -> User:
     """Change role and/or is_active. `actor_id`: who is making the change (None = super admin)."""
     if actor_id == user.id:
@@ -121,7 +122,7 @@ async def reset_password(db: AsyncSession, user: User, password: str) -> None:
     await bump_token_version(db, user)  # signs the user out everywhere
 
 
-async def delete_user(db: AsyncSession, user: User, actor_id: int) -> None:
+async def delete_user(db: AsyncSession, user: User, actor_id: UUID) -> None:
     if actor_id == user.id:
         raise AppError.bad_request("You cannot delete your own account")
     if user.role == UserRole.ADMIN and user.is_active:
@@ -146,6 +147,6 @@ async def bump_token_version(db: AsyncSession, user: User) -> None:
     await db.refresh(user)
 
 
-async def _ensure_not_last_admin(db: AsyncSession, company_id: int | None) -> None:
+async def _ensure_not_last_admin(db: AsyncSession, company_id: UUID | None) -> None:
     if company_id is not None and await _count_active_admins(db, company_id) <= 1:
         raise AppError.bad_request("A company needs at least one active admin")

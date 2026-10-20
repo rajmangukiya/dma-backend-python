@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Annotated
+from uuid import UUID
 
 from pydantic import StringConstraints
 
@@ -31,9 +32,9 @@ class DocumentCounts(CamelModel):
 class DocumentSummary(CamelModel):
     """A document as listed inside its journey's segment."""
 
-    id: int
-    segment_id: int
-    document_skeleton_id: int | None
+    id: UUID
+    segment_id: UUID
+    document_skeleton_id: UUID | None
     title: str
     document_type: str
     status: DocumentStatus
@@ -44,55 +45,55 @@ class DocumentSummary(CamelModel):
 class UploadedFileRead(CamelModel):
     """Never includes the storage key."""
 
-    id: int
-    document_id: int
+    id: UUID
+    document_id: UUID
     original_name: str
     mime_type: str
     size_bytes: int
-    uploaded_by_id: int | None
+    uploaded_by_id: UUID | None
     created_at: datetime
 
 
 class MatchCheckRead(CamelModel):
     target_document_skeleton_title: str
     target_field_name: str
-    target_document_id: int | None
+    target_document_id: UUID | None
     target_document_title: str | None
-    target_segment_id: int | None
+    target_segment_id: UUID | None
     target_segment_name: str | None
     value: str | None
     status: CheckStatus
 
 
 class FieldRowRead(CamelModel):
-    id: int
+    id: UUID
     name: str
     type: FieldType
     value: str | None
     is_manual: bool
     confidence: int | None
-    source_file_id: int | None
+    source_file_id: UUID | None
     source_file_name: str | None
     result: FieldResult
     checks: list[MatchCheckRead]
 
 
 class Ref(CamelModel):
-    id: int
+    id: UUID
     name: str
 
 
 class JourneyRef(CamelModel):
-    id: int
+    id: UUID
     title: str
 
 
 class DocumentDetail(CamelModel):
-    id: int
+    id: UUID
     title: str
     document_type: str
     status: DocumentStatus
-    document_skeleton_id: int | None
+    document_skeleton_id: UUID | None
     journey: JourneyRef
     segment: Ref
     files: list[UploadedFileRead]

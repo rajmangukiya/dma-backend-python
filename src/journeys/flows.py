@@ -1,5 +1,7 @@
 """Journey use cases that combine journeys with documents and matching."""
 
+from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.errors import AppError
@@ -28,7 +30,7 @@ def _status(segments: int, documents_total: int, uploaded: int) -> JourneyStatus
     return "in_progress"
 
 
-async def list_journeys(db: AsyncSession, company_id: int) -> list[JourneyListItem]:
+async def list_journeys(db: AsyncSession, company_id: UUID) -> list[JourneyListItem]:
     rows = await journeys.list_journeys(db, company_id)
     ids = [j.id for j in rows]
     segment_counts = await journeys.count_segments(db, ids)
@@ -108,7 +110,7 @@ async def delete_segment(db: AsyncSession, journey: Journey, segment: Segment) -
 
 
 async def add_document(
-    db: AsyncSession, journey: Journey, segment: Segment, document_skeleton_id: int
+    db: AsyncSession, journey: Journey, segment: Segment, document_skeleton_id: UUID
 ) -> None:
     """Places a skeleton in a segment (as a snapshot of its fields and match rules)."""
     skeleton = await skeletons.get_skeleton(db, document_skeleton_id, journey.company_id)

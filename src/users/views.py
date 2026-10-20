@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, status
 
 from src.auth.dependencies import CurrentCompanyId, CurrentUser, require
@@ -20,7 +22,7 @@ router = APIRouter(
 )
 
 
-async def _load(db: DbSession, company_id: int, user_id: int) -> User:
+async def _load(db: DbSession, company_id: UUID, user_id: UUID) -> User:
     user = await service.get_company_user(db, company_id, user_id)
     if not user:
         raise AppError.not_found("User not found")
@@ -43,7 +45,7 @@ async def create_user(
 
 @router.patch("/{user_id}")
 async def update_user(
-    user_id: int,
+    user_id: UUID,
     body: UpdateUserRequest,
     db: DbSession,
     company_id: CurrentCompanyId,
@@ -56,7 +58,7 @@ async def update_user(
 
 @router.put("/{user_id}/password")
 async def reset_password(
-    user_id: int, body: ResetPasswordRequest, db: DbSession, company_id: CurrentCompanyId
+    user_id: UUID, body: ResetPasswordRequest, db: DbSession, company_id: CurrentCompanyId
 ) -> ApiResponse[None]:
     user = await _load(db, company_id, user_id)
     await service.reset_password(db, user, body.password)
@@ -65,7 +67,7 @@ async def reset_password(
 
 @router.delete("/{user_id}")
 async def delete_user(
-    user_id: int, db: DbSession, company_id: CurrentCompanyId, actor: CurrentUser
+    user_id: UUID, db: DbSession, company_id: CurrentCompanyId, actor: CurrentUser
 ) -> ApiResponse[None]:
     user = await _load(db, company_id, user_id)
     await service.delete_user(db, user, actor_id=actor.id)

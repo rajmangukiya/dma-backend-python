@@ -1,6 +1,7 @@
 """Document use cases: the detail view, uploads and values entered by hand."""
 
 from pathlib import Path
+from uuid import UUID
 
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,7 +70,7 @@ async def document_detail(db: AsyncSession, document: Document, journey: Journey
 
 
 async def upload_files(
-    db: AsyncSession, document: Document, journey: Journey, uploads: list[UploadFile], user_id: int
+    db: AsyncSession, document: Document, journey: Journey, uploads: list[UploadFile], user_id: UUID
 ) -> int:
     """Stores the files, then re-runs extraction over all of the document's files."""
     if not uploads:
@@ -120,7 +121,9 @@ async def delete_document(db: AsyncSession, document: Document, journey: Journey
     get_storage().remove_folder(document_folder(journey.company_id, journey.id, document.id))
 
 
-async def set_value(db: AsyncSession, document: Document, field_id: int, value: str | None) -> None:
+async def set_value(
+    db: AsyncSession, document: Document, field_id: UUID, value: str | None
+) -> None:
     """Sets a value by hand; clearing it restores the extracted value."""
     if document.status != DocumentStatus.READY:
         raise AppError.bad_request("Values can be edited once extraction has finished")

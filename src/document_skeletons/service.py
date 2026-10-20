@@ -1,6 +1,7 @@
 """Document skeletons: the skeleton itself, its fields and their one-way match rules."""
 
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,13 +26,13 @@ from src.document_skeletons.schemas import (
 
 
 async def get_skeleton(
-    db: AsyncSession, document_skeleton_id: int, company_id: int
+    db: AsyncSession, document_skeleton_id: UUID, company_id: UUID
 ) -> DocumentSkeleton | None:
     skeleton = await db.get(DocumentSkeleton, document_skeleton_id)
     return skeleton if skeleton and skeleton.company_id == company_id else None
 
 
-async def list_skeletons(db: AsyncSession, company_id: int) -> list[DocumentSkeleton]:
+async def list_skeletons(db: AsyncSession, company_id: UUID) -> list[DocumentSkeleton]:
     result = await db.scalars(
         select(DocumentSkeleton)
         .where(DocumentSkeleton.company_id == company_id)
@@ -40,7 +41,7 @@ async def list_skeletons(db: AsyncSession, company_id: int) -> list[DocumentSkel
     return list(result)
 
 
-async def get_skeletons(db: AsyncSession, skeleton_ids: list[int]) -> list[DocumentSkeleton]:
+async def get_skeletons(db: AsyncSession, skeleton_ids: list[UUID]) -> list[DocumentSkeleton]:
     if not skeleton_ids:
         return []
     result = await db.scalars(select(DocumentSkeleton).where(DocumentSkeleton.id.in_(skeleton_ids)))
@@ -48,8 +49,8 @@ async def get_skeletons(db: AsyncSession, skeleton_ids: list[int]) -> list[Docum
 
 
 async def count_fields_and_rules(
-    db: AsyncSession, skeleton_ids: list[int]
-) -> tuple[dict[int, int], dict[int, int]]:
+    db: AsyncSession, skeleton_ids: list[UUID]
+) -> tuple[dict[UUID, int], dict[UUID, int]]:
     """({document_skeleton_id: field count}, {document_skeleton_id: match rule count})."""
     if not skeleton_ids:
         return {}, {}
@@ -71,7 +72,7 @@ async def count_fields_and_rules(
 
 
 async def create_skeleton(
-    db: AsyncSession, company_id: int, title: str, document_type: str, description: str | None
+    db: AsyncSession, company_id: UUID, title: str, document_type: str, description: str | None
 ) -> DocumentSkeleton:
     skeleton = DocumentSkeleton(
         company_id=company_id, title=title, document_type=document_type, description=description
@@ -159,7 +160,7 @@ async def match_candidates(db: AsyncSession, skeleton: DocumentSkeleton) -> list
 # --- Fields ------------------------------------------------------------------
 
 
-async def list_fields(db: AsyncSession, skeleton_ids: list[int]) -> list[DocumentSkeletonField]:
+async def list_fields(db: AsyncSession, skeleton_ids: list[UUID]) -> list[DocumentSkeletonField]:
     if not skeleton_ids:
         return []
     result = await db.scalars(
@@ -170,7 +171,7 @@ async def list_fields(db: AsyncSession, skeleton_ids: list[int]) -> list[Documen
     return list(result)
 
 
-async def get_fields(db: AsyncSession, field_ids: list[int]) -> list[DocumentSkeletonField]:
+async def get_fields(db: AsyncSession, field_ids: list[UUID]) -> list[DocumentSkeletonField]:
     if not field_ids:
         return []
     result = await db.scalars(
@@ -180,14 +181,14 @@ async def get_fields(db: AsyncSession, field_ids: list[int]) -> list[DocumentSke
 
 
 async def get_field(
-    db: AsyncSession, document_skeleton_id: int, field_id: int
+    db: AsyncSession, document_skeleton_id: UUID, field_id: UUID
 ) -> DocumentSkeletonField | None:
     field = await db.get(DocumentSkeletonField, field_id)
     return field if field and field.document_skeleton_id == document_skeleton_id else None
 
 
 async def _ensure_field_name_free(
-    db: AsyncSession, document_skeleton_id: int, name: str, except_id: int | None = None
+    db: AsyncSession, document_skeleton_id: UUID, name: str, except_id: UUID | None = None
 ) -> None:
     """Field names are unique per skeleton, ignoring case."""
     existing = await db.scalar(
@@ -204,7 +205,7 @@ async def _ensure_field_name_free(
 
 
 async def create_field(
-    db: AsyncSession, document_skeleton_id: int, name: str, field_type: FieldType
+    db: AsyncSession, document_skeleton_id: UUID, name: str, field_type: FieldType
 ) -> DocumentSkeletonField:
     await _ensure_field_name_free(db, document_skeleton_id, name)
     last = await db.scalar(
@@ -246,7 +247,7 @@ async def delete_field(db: AsyncSession, field: DocumentSkeletonField) -> None:
 
 
 async def list_rules_from(
-    db: AsyncSession, field_ids: list[int]
+    db: AsyncSession, field_ids: list[UUID]
 ) -> list[DocumentSkeletonFieldMatch]:
     """The match rules owned by these fields."""
     if not field_ids:
@@ -258,7 +259,7 @@ async def list_rules_from(
 
 
 async def _list_rules_to(
-    db: AsyncSession, field_ids: list[int]
+    db: AsyncSession, field_ids: list[UUID]
 ) -> list[DocumentSkeletonFieldMatch]:
     """The match rules on other fields that point at these fields."""
     if not field_ids:
@@ -272,7 +273,7 @@ async def _list_rules_to(
 
 
 async def add_match(
-    db: AsyncSession, field: DocumentSkeletonField, match_field_id: int, company_id: int
+    db: AsyncSession, field: DocumentSkeletonField, match_field_id: UUID, company_id: UUID
 ) -> None:
     """`field` must match `match_field_id`, a field on another skeleton of the same company."""
     target = await db.get(DocumentSkeletonField, match_field_id)
@@ -287,7 +288,9 @@ async def add_match(
     await db.commit()
 
 
-async def remove_match(db: AsyncSession, field: DocumentSkeletonField, match_field_id: int) -> None:
+async def remove_match(
+    db: AsyncSession, field: DocumentSkeletonField, match_field_id: UUID
+) -> None:
     result = await db.execute(
         delete(DocumentSkeletonFieldMatch).where(
             DocumentSkeletonFieldMatch.field_id == field.id,

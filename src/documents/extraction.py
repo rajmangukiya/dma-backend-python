@@ -7,6 +7,7 @@ version number makes sure a stale run can never overwrite a newer result.
 
 import asyncio
 import logging
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,10 +23,10 @@ logger = logging.getLogger(__name__)
 class ExtractionRunner:
     def __init__(self, extractor: Extractor):
         self.extractor = extractor
-        self.tasks: dict[int, asyncio.Task] = {}  # kept so tasks aren't garbage-collected
-        self.versions: dict[int, int] = {}
+        self.tasks: dict[UUID, asyncio.Task] = {}  # kept so tasks aren't garbage-collected
+        self.versions: dict[UUID, int] = {}
 
-    async def queue(self, db: AsyncSession, document_id: int) -> None:
+    async def queue(self, db: AsyncSession, document_id: UUID) -> None:
         version = self.versions.get(document_id, 0) + 1
         self.versions[document_id] = version
         if previous := self.tasks.get(document_id):
@@ -51,10 +52,10 @@ class ExtractionRunner:
         for task in self.tasks.values():
             task.cancel()
 
-    def _is_current(self, document_id: int, version: int) -> bool:
+    def _is_current(self, document_id: UUID, version: int) -> bool:
         return self.versions.get(document_id) == version
 
-    async def _run(self, document_id: int, version: int) -> None:
+    async def _run(self, document_id: UUID, version: int) -> None:
         await asyncio.sleep(get_settings().extraction_delay_ms / 1000)
         # A background task outlives the request, so it opens its own session
         async with SessionLocal() as db:

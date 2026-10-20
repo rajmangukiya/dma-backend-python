@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Annotated, ClassVar, Literal
-
-from pydantic import Field
+from uuid import UUID
 
 from src.common.schemas import CamelModel, PatchRequest, trimmed
 from src.documents.schemas import DocumentSummary
@@ -36,15 +35,15 @@ class SegmentNameRequest(CamelModel):
 
 
 class AddDocumentRequest(CamelModel):
-    document_skeleton_id: Annotated[int, Field(gt=0)]
+    document_skeleton_id: UUID
 
 
 # --- Responses ---------------------------------------------------------------
 
 
 class JourneyRead(CamelModel):
-    id: int
-    company_id: int
+    id: UUID
+    company_id: UUID
     title: str
     description: str | None
     created_at: datetime
@@ -66,8 +65,8 @@ class JourneyStats(CamelModel):
 
 
 class SegmentWithDocuments(CamelModel):
-    id: int
-    journey_id: int
+    id: UUID
+    journey_id: UUID
     name: str
     position: int
     created_at: datetime

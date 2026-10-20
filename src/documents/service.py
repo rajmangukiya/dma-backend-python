@@ -1,6 +1,7 @@
 """Documents placed in journeys: their field snapshots, values and uploaded files."""
 
 from dataclasses import dataclass
+from uuid import UUID
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert
@@ -31,16 +32,16 @@ class JourneyGraph:
 
 @dataclass
 class ExtractedValue:
-    document_field_id: int
+    document_field_id: UUID
     value: str | None
-    source_file_id: int | None
+    source_file_id: UUID | None
     confidence: int | None
 
 
 # --- Documents ---------------------------------------------------------------
 
 
-async def get_document(db: AsyncSession, document_id: int) -> Document | None:
+async def get_document(db: AsyncSession, document_id: UUID) -> Document | None:
     """Not scoped to a company: callers check the document's journey belongs to theirs."""
     return await db.get(Document, document_id)
 
@@ -49,11 +50,11 @@ async def list_by_status(db: AsyncSession, status: DocumentStatus) -> list[Docum
     return list(await db.scalars(select(Document).where(Document.status == status)))
 
 
-async def list_segment_documents(db: AsyncSession, segment_id: int) -> list[Document]:
+async def list_segment_documents(db: AsyncSession, segment_id: UUID) -> list[Document]:
     return list(await db.scalars(select(Document).where(Document.segment_id == segment_id)))
 
 
-async def exists_in_segment(db: AsyncSession, segment_id: int, document_skeleton_id: int) -> bool:
+async def exists_in_segment(db: AsyncSession, segment_id: UUID, document_skeleton_id: UUID) -> bool:
     count = await db.scalar(
         select(func.count())
         .select_from(Document)
@@ -65,7 +66,7 @@ async def exists_in_segment(db: AsyncSession, segment_id: int, document_skeleton
 
 
 async def create_from_skeleton(
-    db: AsyncSession, journey_id: int, segment_id: int, skeleton: DocumentSkeleton
+    db: AsyncSession, journey_id: UUID, segment_id: UUID, skeleton: DocumentSkeleton
 ) -> Document:
     """Places a skeleton in a segment.
 
@@ -136,7 +137,9 @@ async def delete_document(db: AsyncSession, document: Document) -> None:
     await db.commit()
 
 
-async def count_by_journey(db: AsyncSession, journey_ids: list[int]) -> dict[int, tuple[int, int]]:
+async def count_by_journey(
+    db: AsyncSession, journey_ids: list[UUID]
+) -> dict[UUID, tuple[int, int]]:
     """{journey_id: (documents, documents with at least one file)}."""
     if not journey_ids:
         return {}
@@ -153,7 +156,7 @@ async def count_by_journey(db: AsyncSession, journey_ids: list[int]) -> dict[int
     return {journey_id: (total, uploaded) for journey_id, total, uploaded in result.all()}
 
 
-async def journey_count_by_skeleton(db: AsyncSession, skeleton_ids: list[int]) -> dict[int, int]:
+async def journey_count_by_skeleton(db: AsyncSession, skeleton_ids: list[UUID]) -> dict[UUID, int]:
     """{document_skeleton_id: number of journeys using it}."""
     if not skeleton_ids:
         return {}
@@ -173,7 +176,7 @@ async def count_files(db: AsyncSession) -> int:
     return await db.scalar(select(func.count()).select_from(UploadedFile)) or 0
 
 
-async def load_journey_graph(db: AsyncSession, journey_id: int) -> JourneyGraph:
+async def load_journey_graph(db: AsyncSession, journey_id: UUID) -> JourneyGraph:
     documents = list(
         await db.scalars(
             select(Document)
@@ -218,7 +221,7 @@ async def load_journey_graph(db: AsyncSession, journey_id: int) -> JourneyGraph:
 # --- Fields and values -------------------------------------------------------
 
 
-async def list_fields(db: AsyncSession, document_id: int) -> list[DocumentField]:
+async def list_fields(db: AsyncSession, document_id: UUID) -> list[DocumentField]:
     return list(
         await db.scalars(
             select(DocumentField)
@@ -228,13 +231,13 @@ async def list_fields(db: AsyncSession, document_id: int) -> list[DocumentField]
     )
 
 
-async def get_field(db: AsyncSession, document_id: int, field_id: int) -> DocumentField | None:
+async def get_field(db: AsyncSession, document_id: UUID, field_id: UUID) -> DocumentField | None:
     field = await db.get(DocumentField, field_id)
     return field if field and field.document_id == document_id else None
 
 
 async def replace_extracted_values(
-    db: AsyncSession, document_id: int, extracted: list[ExtractedValue]
+    db: AsyncSession, document_id: UUID, extracted: list[ExtractedValue]
 ) -> None:
     """Swaps in a new set of extracted values. Values entered by hand are kept."""
     field_ids = [f.id for f in await list_fields(db, document_id)]
@@ -266,7 +269,7 @@ async def replace_extracted_values(
     await db.commit()
 
 
-async def clear_extracted_values(db: AsyncSession, document_id: int) -> None:
+async def clear_extracted_values(db: AsyncSession, document_id: UUID) -> None:
     field_ids = [f.id for f in await list_fields(db, document_id)]
     if field_ids:
         await db.execute(
@@ -307,7 +310,7 @@ async def clear_manual_value(db: AsyncSession, field: DocumentField) -> None:
 # --- Uploaded files ----------------------------------------------------------
 
 
-async def list_files(db: AsyncSession, document_id: int) -> list[UploadedFile]:
+async def list_files(db: AsyncSession, document_id: UUID) -> list[UploadedFile]:
     return list(
         await db.scalars(
             select(UploadedFile)
@@ -317,7 +320,7 @@ async def list_files(db: AsyncSession, document_id: int) -> list[UploadedFile]:
     )
 
 
-async def get_file(db: AsyncSession, document_id: int, file_id: int) -> UploadedFile | None:
+async def get_file(db: AsyncSession, document_id: UUID, file_id: UUID) -> UploadedFile | None:
     file = await db.get(UploadedFile, file_id)
     return file if file and file.document_id == document_id else None
 

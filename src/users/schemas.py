@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 from typing import Annotated, Literal
+from uuid import UUID
 
 from pydantic import AfterValidator
 
@@ -42,10 +43,10 @@ CompanyRole = Literal[
 class PublicUser(CamelModel):
     """A user as returned by the API — never includes the password hash."""
 
-    id: int
+    id: UUID
     username: str
     role: UserRole
-    company_id: int | None
+    company_id: UUID | None
     is_active: bool
     created_at: datetime
     updated_at: datetime

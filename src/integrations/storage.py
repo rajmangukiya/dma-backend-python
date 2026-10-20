@@ -9,6 +9,7 @@ import uuid
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
 from typing import Protocol
+from uuid import UUID
 
 from src.common.config import get_settings
 
@@ -28,11 +29,11 @@ class FileStorage(Protocol):
 
 
 # Folder layout: company-<id>/journey-<id>/document-<id>/<uuid>.<ext>
-def journey_folder(company_id: int, journey_id: int) -> str:
+def journey_folder(company_id: UUID, journey_id: UUID) -> str:
     return f"company-{company_id}/journey-{journey_id}"
 
 
-def document_folder(company_id: int, journey_id: int, document_id: int) -> str:
+def document_folder(company_id: UUID, journey_id: UUID, document_id: UUID) -> str:
     return f"{journey_folder(company_id, journey_id)}/document-{document_id}"
 
 

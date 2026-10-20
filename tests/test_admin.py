@@ -1,5 +1,7 @@
 """Platform super admin (/api/admin)."""
 
+from uuid import uuid4
+
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -92,12 +94,14 @@ async def test_company_detail_and_not_found(client: AsyncClient, db: AsyncSessio
     await create_user(db, "boss", UserRole.ADMIN, acme)
 
     detail = (await client.get(f"/api/admin/companies/{acme.id}")).json()["data"]
-    missing = await client.get("/api/admin/companies/999")
+    missing = await client.get(f"/api/admin/companies/{uuid4()}")
+    malformed = await client.get("/api/admin/companies/999")
 
     assert [user["username"] for user in detail["users"]] == ["boss"]
     assert "password" not in detail["users"][0]
     assert missing.status_code == 404
     assert missing.json()["message"] == "Company not found"
+    assert malformed.status_code == 400  # ids are UUIDs
 
 
 async def test_super_admin_resets_password_and_role(client: AsyncClient, db: AsyncSession) -> None:

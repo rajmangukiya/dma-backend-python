@@ -30,7 +30,7 @@ async def refresh(db: AsyncSession, refresh_token: str | None) -> User:
         raise AppError.unauthorized("Refresh token missing")
 
     payload = decode_token(refresh_token, "refresh")
-    user = await users.get_user(db, int(payload.sub))
+    user = await users.get_user(db, payload.sub)
     valid = (
         user is not None
         and user.is_active

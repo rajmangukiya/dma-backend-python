@@ -1,5 +1,8 @@
+import os
+import time
 from datetime import datetime
 from enum import Enum
+from uuid import UUID
 
 from sqlalchemy import DateTime, MetaData, func
 from sqlalchemy import Enum as SAEnum
@@ -14,6 +17,24 @@ NAMING_CONVENTION = {
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
     "pk": "pk_%(table_name)s",
 }
+
+
+def new_id() -> UUID:
+    """A UUIDv7 (RFC 9562): 48-bit millisecond timestamp + 74 random bits.
+
+    Unlike random v4 ids, v7 ids sort in creation order, which keeps "ORDER BY id"
+    meaningful and Postgres indexes compact. (Python 3.14 adds uuid.uuid7().)
+    """
+    milliseconds = time.time_ns() // 1_000_000
+    rand = int.from_bytes(os.urandom(10))  # 80 random bits, 74 are used
+    value = (
+        (milliseconds & (2**48 - 1)) << 80  # unix_ts_ms
+        | 0x7 << 76  # version 7
+        | (rand >> 62 & 0xFFF) << 64  # rand_a (12 bits)
+        | 0b10 << 62  # variant (RFC 9562)
+        | rand & (2**62 - 1)  # rand_b (62 bits)
+    )
+    return UUID(int=value)
 
 
 class Base(DeclarativeBase):

@@ -1,6 +1,7 @@
 """Companies: reads and writes."""
 
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.companies.models import Company
 
 
-async def get_company(db: AsyncSession, company_id: int) -> Company | None:
+async def get_company(db: AsyncSession, company_id: UUID) -> Company | None:
     return await db.get(Company, company_id)
 
 
@@ -28,7 +29,7 @@ async def count_companies(db: AsyncSession, *, active_only: bool = False) -> int
     return await db.scalar(query) or 0
 
 
-async def is_company_active(db: AsyncSession, company_id: int | None) -> bool:
+async def is_company_active(db: AsyncSession, company_id: UUID | None) -> bool:
     """The super admin has no company, so counts as active."""
     if company_id is None:
         return True

@@ -7,6 +7,7 @@ Phase one compares values ignoring whitespace and case.
 import re
 from dataclasses import dataclass
 from typing import Literal
+from uuid import UUID
 
 from src.document_skeletons.enums import FieldType
 from src.documents.enums import DocumentStatus
@@ -29,22 +30,22 @@ CheckStatus = Literal[
 class MatchCheck:
     target_document_skeleton_title: str
     target_field_name: str
-    target_document_id: int | None
+    target_document_id: UUID | None
     target_document_title: str | None
-    target_segment_id: int | None
+    target_segment_id: UUID | None
     value: str | None
     status: CheckStatus
 
 
 @dataclass
 class FieldRow:
-    id: int
+    id: UUID
     name: str
     type: FieldType
     value: str | None
     is_manual: bool
     confidence: int | None
-    source_file_id: int | None
+    source_file_id: UUID | None
     result: FieldResult
     checks: list[MatchCheck]
 
@@ -66,10 +67,10 @@ def normalize(value: str) -> str:
 class JourneyMatcher:
     def __init__(self, graph: JourneyGraph):
         self.graph = graph
-        self.fields_by_doc: dict[int, list[DocumentField]] = {}
+        self.fields_by_doc: dict[UUID, list[DocumentField]] = {}
         for field in graph.fields:
             self.fields_by_doc.setdefault(field.document_id, []).append(field)
-        self.rules_by_field: dict[int, list[DocumentFieldMatchRule]] = {}
+        self.rules_by_field: dict[UUID, list[DocumentFieldMatchRule]] = {}
         for rule in graph.rules:
             self.rules_by_field.setdefault(rule.document_field_id, []).append(rule)
         self.value_by_field = {v.document_field_id: v for v in graph.values}

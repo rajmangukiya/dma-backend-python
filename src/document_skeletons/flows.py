@@ -1,5 +1,7 @@
 """Skeleton use cases that need another module's data."""
 
+from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.document_skeletons import service as skeletons
@@ -7,7 +9,7 @@ from src.document_skeletons.schemas import SkeletonListItem, SkeletonRead
 from src.documents import service as documents
 
 
-async def list_skeletons(db: AsyncSession, company_id: int) -> list[SkeletonListItem]:
+async def list_skeletons(db: AsyncSession, company_id: UUID) -> list[SkeletonListItem]:
     """Every skeleton with its field count, rule count and the journeys using it."""
     rows = await skeletons.list_skeletons(db, company_id)
     ids = [t.id for t in rows]

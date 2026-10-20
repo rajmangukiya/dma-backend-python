@@ -46,7 +46,7 @@ src/
     cookies.py        # auth cookie names, paths, flags; set / clear helpers
     passwords.py      # bcrypt hash / verify
   database/
-    base.py           # Base class, timestamp mixins, pg_enum helper, constraint naming
+    base.py           # Base class, new_id() (UUIDv7 ids), timestamp mixins, pg_enum, constraint naming
     session.py        # async engine, session factory, get_db + DbSession dependency
     models.py         # registry: imports every module's tables (for Alembic and tests)
   health/
@@ -106,6 +106,7 @@ tests/
   test_health.py
   test_errors.py      # error shapes: validation 400, AppError, 404, 500
   test_auth.py
+  test_ids.py         # new_id(): UUID version 7, creation order
   test_users.py       # /api/users
   test_admin.py       # /api/admin
   test_document_skeletons.py  # /api/document-skeletons
@@ -220,6 +221,14 @@ Conventions come from `~/Desktop/Projects/docs/backend/A-architecture.md` and `M
 - **`db.flush()` vs `db.commit()`**: getting generated ids inside one transaction (`create_from_skeleton`)
 - **Aggregates**: `func.count().filter(...)`, `func.count(func.distinct(...))`, `.exists()` subqueries
 - **`pathlib`**: `Path.resolve()`, `is_relative_to()` — keeping storage keys inside the upload folder
+
+## UUID ids — what to look up
+
+- **UUID versions**: v4 (random) vs v7 (timestamp first, RFC 9562); why v7 sorts by creation time and keeps B-tree indexes compact
+- **Bit layout** in `new_id()`: 48-bit ms timestamp, 4-bit version, variant bits, random bits; `UUID(int=...)`
+- **`Mapped[UUID]`** maps to PostgreSQL `uuid`; `default=new_id` (Python-side) vs `server_default` (database-side)
+- **UUIDs in FastAPI**: `skeleton_id: UUID` path params are validated (a bad id gives 400); Pydantic serialises them as strings in JSON
+- **Why ids aren't sequential numbers**: not guessable, safe to generate anywhere (no round trip to the database)
 
 ## Project structure — what to look up
 

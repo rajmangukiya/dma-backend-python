@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 from typing import Literal
+from uuid import UUID
 
 import jwt
 from fastapi import Response
@@ -22,9 +23,11 @@ TokenKind = Literal["access", "refresh"]
 
 
 class TokenPayload(BaseModel):
-    sub: str  # user id (JWT "subject" must be a string)
+    # User id. Stored as a string in the JWT; parsed back to a UUID, so a token from
+    # before the switch to UUIDs (sub="2") fails validation and is rejected as invalid
+    sub: UUID
     role: UserRole
-    company_id: int | None
+    company_id: UUID | None
     token_version: int
 
 
@@ -40,7 +43,7 @@ def create_token(user: User, kind: TokenKind) -> tuple[str, datetime]:
     secret, lifetime = _secret_and_lifetime(kind)
     expires_at = datetime.now(UTC) + lifetime
     payload = TokenPayload(
-        sub=str(user.id),
+        sub=user.id,
         role=user.role,
         company_id=user.company_id,
         token_version=user.token_version,

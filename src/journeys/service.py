@@ -1,6 +1,7 @@
 """Journeys and their segments: reads and writes."""
 
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,12 +12,12 @@ from src.journeys.models import Journey, Segment
 # --- Journeys ----------------------------------------------------------------
 
 
-async def get_journey(db: AsyncSession, journey_id: int, company_id: int) -> Journey | None:
+async def get_journey(db: AsyncSession, journey_id: UUID, company_id: UUID) -> Journey | None:
     journey = await db.get(Journey, journey_id)
     return journey if journey and journey.company_id == company_id else None
 
 
-async def list_journeys(db: AsyncSession, company_id: int) -> list[Journey]:
+async def list_journeys(db: AsyncSession, company_id: UUID) -> list[Journey]:
     result = await db.scalars(
         select(Journey).where(Journey.company_id == company_id).order_by(Journey.created_at.desc())
     )
@@ -24,7 +25,7 @@ async def list_journeys(db: AsyncSession, company_id: int) -> list[Journey]:
 
 
 async def create_journey(
-    db: AsyncSession, company_id: int, title: str, description: str | None
+    db: AsyncSession, company_id: UUID, title: str, description: str | None
 ) -> Journey:
     journey = Journey(company_id=company_id, title=title, description=description)
     db.add(journey)
@@ -51,7 +52,7 @@ async def count_journeys(db: AsyncSession) -> int:
     return await db.scalar(select(func.count()).select_from(Journey)) or 0
 
 
-async def count_by_company(db: AsyncSession) -> dict[int, int]:
+async def count_by_company(db: AsyncSession) -> dict[UUID, int]:
     """{company_id: number of journeys}; companies without journeys are missing."""
     result = await db.execute(select(Journey.company_id, func.count()).group_by(Journey.company_id))
     return dict(result.all())
@@ -60,7 +61,7 @@ async def count_by_company(db: AsyncSession) -> dict[int, int]:
 # --- Segments ----------------------------------------------------------------
 
 
-async def get_segment(db: AsyncSession, segment_id: int, company_id: int) -> Segment | None:
+async def get_segment(db: AsyncSession, segment_id: UUID, company_id: UUID) -> Segment | None:
     """A segment, only if its journey belongs to `company_id`."""
     return await db.scalar(
         select(Segment)
@@ -69,7 +70,7 @@ async def get_segment(db: AsyncSession, segment_id: int, company_id: int) -> Seg
     )
 
 
-async def list_segments(db: AsyncSession, journey_id: int) -> list[Segment]:
+async def list_segments(db: AsyncSession, journey_id: UUID) -> list[Segment]:
     result = await db.scalars(
         select(Segment)
         .where(Segment.journey_id == journey_id)
@@ -78,7 +79,7 @@ async def list_segments(db: AsyncSession, journey_id: int) -> list[Segment]:
     return list(result)
 
 
-async def count_segments(db: AsyncSession, journey_ids: list[int]) -> dict[int, int]:
+async def count_segments(db: AsyncSession, journey_ids: list[UUID]) -> dict[UUID, int]:
     """{journey_id: number of segments}."""
     if not journey_ids:
         return {}
@@ -91,7 +92,7 @@ async def count_segments(db: AsyncSession, journey_ids: list[int]) -> dict[int, 
 
 
 async def _ensure_segment_name_free(
-    db: AsyncSession, journey_id: int, name: str, except_id: int | None = None
+    db: AsyncSession, journey_id: UUID, name: str, except_id: UUID | None = None
 ) -> None:
     """Segment names are unique within a journey, ignoring case."""
     existing = await db.scalar(
@@ -109,7 +110,7 @@ async def _ensure_segment_name_free(
         raise AppError.conflict(message, details)
 
 
-async def create_segment(db: AsyncSession, journey_id: int, name: str) -> Segment:
+async def create_segment(db: AsyncSession, journey_id: UUID, name: str) -> Segment:
     await _ensure_segment_name_free(db, journey_id, name)
     last = await db.scalar(
         select(func.max(Segment.position)).where(Segment.journey_id == journey_id)

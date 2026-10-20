@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, status
 
 from src.admin import flows
@@ -27,7 +29,7 @@ router = APIRouter(
 )
 
 
-async def _load_company(db: DbSession, company_id: int) -> Company:
+async def _load_company(db: DbSession, company_id: UUID) -> Company:
     company = await companies.get_company(db, company_id)
     if not company:
         raise AppError.not_found("Company not found")
@@ -50,7 +52,7 @@ async def create_company(body: CreateCompanyRequest, db: DbSession) -> ApiRespon
 
 
 @router.get("/companies/{company_id}")
-async def get_company(company_id: int, db: DbSession) -> ApiResponse[CompanyDetail]:
+async def get_company(company_id: UUID, db: DbSession) -> ApiResponse[CompanyDetail]:
     company = await _load_company(db, company_id)
     company_users = await users.list_company_users(db, company_id)
     return ok(
@@ -63,7 +65,7 @@ async def get_company(company_id: int, db: DbSession) -> ApiResponse[CompanyDeta
 
 @router.patch("/companies/{company_id}")
 async def update_company(
-    company_id: int, body: UpdateCompanyRequest, db: DbSession
+    company_id: UUID, body: UpdateCompanyRequest, db: DbSession
 ) -> ApiResponse[CompanyRead]:
     company = await _load_company(db, company_id)
     if body.name:
@@ -76,7 +78,7 @@ async def update_company(
 
 @router.post("/companies/{company_id}/users", status_code=status.HTTP_201_CREATED)
 async def create_company_user(
-    company_id: int, body: CreateUserRequest, db: DbSession
+    company_id: UUID, body: CreateUserRequest, db: DbSession
 ) -> ApiResponse[PublicUser]:
     await _load_company(db, company_id)
     user = await users.create_user(db, company_id, body.username, body.password, body.role)
@@ -85,7 +87,7 @@ async def create_company_user(
 
 @router.patch("/companies/{company_id}/users/{user_id}")
 async def update_company_user(
-    company_id: int, user_id: int, body: UpdateCompanyUserRequest, db: DbSession
+    company_id: UUID, user_id: UUID, body: UpdateCompanyUserRequest, db: DbSession
 ) -> ApiResponse[PublicUser]:
     user = await users.get_company_user(db, company_id, user_id)
     if not user:

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, status
 
 from src.auth.dependencies import CurrentCompanyId, require
@@ -28,14 +30,16 @@ can_view = [Depends(require(Permission.VIEW_JOURNEYS))]
 can_manage = [Depends(require(Permission.MANAGE_JOURNEYS))]
 
 
-async def load_journey(db: DbSession, company_id: int, journey_id: int) -> Journey:
+async def load_journey(db: DbSession, company_id: UUID, journey_id: UUID) -> Journey:
     journey = await service.get_journey(db, journey_id, company_id)
     if not journey:
         raise AppError.not_found("Journey not found")
     return journey
 
 
-async def _load_segment(db: DbSession, company_id: int, segment_id: int) -> tuple[Segment, Journey]:
+async def _load_segment(
+    db: DbSession, company_id: UUID, segment_id: UUID
+) -> tuple[Segment, Journey]:
     segment = await service.get_segment(db, segment_id, company_id)
     if not segment:
         raise AppError.not_found("Segment not found")
@@ -62,7 +66,7 @@ async def create_journey(
 
 @router.get("/{journey_id}", dependencies=can_view)
 async def get_journey(
-    journey_id: int, db: DbSession, company_id: CurrentCompanyId
+    journey_id: UUID, db: DbSession, company_id: CurrentCompanyId
 ) -> ApiResponse[JourneyDetail]:
     journey = await load_journey(db, company_id, journey_id)
     return ok(await flows.journey_detail(db, journey))
@@ -70,7 +74,7 @@ async def get_journey(
 
 @router.patch("/{journey_id}", dependencies=can_manage)
 async def update_journey(
-    journey_id: int, body: UpdateJourneyRequest, db: DbSession, company_id: CurrentCompanyId
+    journey_id: UUID, body: UpdateJourneyRequest, db: DbSession, company_id: CurrentCompanyId
 ) -> ApiResponse[JourneyDetail]:
     journey = await load_journey(db, company_id, journey_id)
     journey = await service.update_journey(db, journey, body.changes())
@@ -79,7 +83,7 @@ async def update_journey(
 
 @router.delete("/{journey_id}", dependencies=can_manage)
 async def delete_journey(
-    journey_id: int, db: DbSession, company_id: CurrentCompanyId
+    journey_id: UUID, db: DbSession, company_id: CurrentCompanyId
 ) -> ApiResponse[None]:
     journey = await load_journey(db, company_id, journey_id)
     await flows.delete_journey(db, journey)
@@ -88,7 +92,7 @@ async def delete_journey(
 
 @router.post("/{journey_id}/segments", dependencies=can_manage, status_code=status.HTTP_201_CREATED)
 async def add_segment(
-    journey_id: int, body: SegmentNameRequest, db: DbSession, company_id: CurrentCompanyId
+    journey_id: UUID, body: SegmentNameRequest, db: DbSession, company_id: CurrentCompanyId
 ) -> ApiResponse[JourneyDetail]:
     journey = await load_journey(db, company_id, journey_id)
     await service.create_segment(db, journey.id, body.name)
@@ -100,7 +104,7 @@ async def add_segment(
 
 @segments_router.patch("/{segment_id}")
 async def rename_segment(
-    segment_id: int, body: SegmentNameRequest, db: DbSession, company_id: CurrentCompanyId
+    segment_id: UUID, body: SegmentNameRequest, db: DbSession, company_id: CurrentCompanyId
 ) -> ApiResponse[JourneyDetail]:
     segment, journey = await _load_segment(db, company_id, segment_id)
     await service.rename_segment(db, segment, body.name)
@@ -110,7 +114,7 @@ async def rename_segment(
 # Also removes the segment's documents and their uploaded files
 @segments_router.delete("/{segment_id}")
 async def delete_segment(
-    segment_id: int, db: DbSession, company_id: CurrentCompanyId
+    segment_id: UUID, db: DbSession, company_id: CurrentCompanyId
 ) -> ApiResponse[JourneyDetail]:
     segment, journey = await _load_segment(db, company_id, segment_id)
     await flows.delete_segment(db, journey, segment)
@@ -119,7 +123,7 @@ async def delete_segment(
 
 @segments_router.post("/{segment_id}/documents", status_code=status.HTTP_201_CREATED)
 async def add_document(
-    segment_id: int, body: AddDocumentRequest, db: DbSession, company_id: CurrentCompanyId
+    segment_id: UUID, body: AddDocumentRequest, db: DbSession, company_id: CurrentCompanyId
 ) -> ApiResponse[JourneyDetail]:
     segment, journey = await _load_segment(db, company_id, segment_id)
     await flows.add_document(db, journey, segment, body.document_skeleton_id)

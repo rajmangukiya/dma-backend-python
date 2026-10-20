@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Annotated, ClassVar
-
-from pydantic import Field
+from uuid import UUID
 
 from src.common.schemas import CamelModel, PatchRequest, trimmed
 from src.document_skeletons.enums import FieldType
@@ -40,15 +39,15 @@ class UpdateFieldRequest(PatchRequest):
 
 
 class AddMatchRequest(CamelModel):
-    match_field_id: Annotated[int, Field(gt=0)]
+    match_field_id: UUID
 
 
 # --- Responses ---------------------------------------------------------------
 
 
 class SkeletonRead(CamelModel):
-    id: int
-    company_id: int
+    id: UUID
+    company_id: UUID
     title: str
     document_type: str
     description: str | None
@@ -65,15 +64,15 @@ class SkeletonListItem(SkeletonRead):
 class FieldMatch(CamelModel):
     """A match rule, seen from the field that owns it."""
 
-    field_id: int
+    field_id: UUID
     field_name: str
-    document_skeleton_id: int
+    document_skeleton_id: UUID
     document_skeleton_title: str
 
 
 class SkeletonFieldDetail(CamelModel):
-    id: int
-    document_skeleton_id: int
+    id: UUID
+    document_skeleton_id: UUID
     name: str
     type: FieldType
     position: int
@@ -86,7 +85,7 @@ class SkeletonDetail(SkeletonRead):
 
 
 class CandidateField(CamelModel):
-    id: int
+    id: UUID
     name: str
     type: FieldType
 
@@ -94,7 +93,7 @@ class CandidateField(CamelModel):
 class MatchCandidate(CamelModel):
     """Another skeleton and its fields, offered in the "matches with" picker."""
 
-    id: int
+    id: UUID
     title: str
     document_type: str
     fields: list[CandidateField]

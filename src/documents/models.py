@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from sqlalchemy import (
     DateTime,
@@ -12,7 +13,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.database.base import Base, CreatedAtMixin, TimestampMixin, pg_enum
+from src.database.base import Base, CreatedAtMixin, TimestampMixin, new_id, pg_enum
 from src.document_skeletons.enums import FieldType
 from src.documents.enums import DocumentStatus
 
@@ -26,15 +27,15 @@ class Document(TimestampMixin, Base):
 
     __tablename__ = "documents"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    journey_id: Mapped[int] = mapped_column(
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    journey_id: Mapped[UUID] = mapped_column(
         ForeignKey("journeys.id", ondelete="CASCADE"), index=True
     )
-    segment_id: Mapped[int] = mapped_column(
+    segment_id: Mapped[UUID] = mapped_column(
         ForeignKey("segments.id", ondelete="CASCADE"), index=True
     )
     # Source skeleton; kept for match resolution, nulled if the skeleton is deleted
-    document_skeleton_id: Mapped[int | None] = mapped_column(
+    document_skeleton_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("document_skeletons.id", ondelete="SET NULL"), index=True
     )
     title: Mapped[str] = mapped_column(String(200))
@@ -52,9 +53,9 @@ class DocumentField(Base):
     __tablename__ = "document_fields"
     __table_args__ = (UniqueConstraint("document_id", "name"),)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    document_id: Mapped[int] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"))
-    document_skeleton_field_id: Mapped[int | None] = mapped_column(
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    document_id: Mapped[UUID] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"))
+    document_skeleton_field_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("document_skeleton_fields.id", ondelete="SET NULL")
     )
     name: Mapped[str] = mapped_column(String(150))
@@ -74,11 +75,11 @@ class DocumentFieldMatchRule(Base):
         UniqueConstraint("document_field_id", "target_document_skeleton_id", "target_field_name"),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    document_field_id: Mapped[int] = mapped_column(
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    document_field_id: Mapped[UUID] = mapped_column(
         ForeignKey("document_fields.id", ondelete="CASCADE")
     )
-    target_document_skeleton_id: Mapped[int | None] = mapped_column(
+    target_document_skeleton_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("document_skeletons.id", ondelete="SET NULL"), index=True
     )
     target_document_skeleton_title: Mapped[str] = mapped_column(String(200))
@@ -90,8 +91,8 @@ class UploadedFile(CreatedAtMixin, Base):
 
     __tablename__ = "uploaded_files"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    document_id: Mapped[int] = mapped_column(
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    document_id: Mapped[UUID] = mapped_column(
         ForeignKey("documents.id", ondelete="CASCADE"), index=True
     )
     original_name: Mapped[str] = mapped_column(String(255))
@@ -99,7 +100,7 @@ class UploadedFile(CreatedAtMixin, Base):
     storage_key: Mapped[str] = mapped_column(Text)
     mime_type: Mapped[str] = mapped_column(String(150))
     size_bytes: Mapped[int]
-    uploaded_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    uploaded_by_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
 
 
 class DocumentFieldValue(Base):
@@ -107,12 +108,12 @@ class DocumentFieldValue(Base):
 
     __tablename__ = "document_field_values"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    document_field_id: Mapped[int] = mapped_column(
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    document_field_id: Mapped[UUID] = mapped_column(
         ForeignKey("document_fields.id", ondelete="CASCADE"), unique=True
     )
     value: Mapped[str | None] = mapped_column(Text)
-    source_file_id: Mapped[int | None] = mapped_column(
+    source_file_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("uploaded_files.id", ondelete="SET NULL")
     )
     confidence: Mapped[int | None] = mapped_column(SmallInteger)  # 0-100, null when manual

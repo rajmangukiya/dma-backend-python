@@ -1,7 +1,9 @@
+from uuid import UUID
+
 from sqlalchemy import CheckConstraint, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.database.base import Base, TimestampMixin, pg_enum
+from src.database.base import Base, TimestampMixin, new_id, pg_enum
 from src.document_skeletons.enums import FieldType
 
 
@@ -10,8 +12,8 @@ class DocumentSkeleton(TimestampMixin, Base):
 
     __tablename__ = "document_skeletons"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    company_id: Mapped[int] = mapped_column(
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    company_id: Mapped[UUID] = mapped_column(
         ForeignKey("companies.id", ondelete="CASCADE"), index=True
     )
     title: Mapped[str] = mapped_column(String(200))
@@ -23,8 +25,8 @@ class DocumentSkeletonField(Base):
     __tablename__ = "document_skeleton_fields"
     __table_args__ = (UniqueConstraint("document_skeleton_id", "name"),)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    document_skeleton_id: Mapped[int] = mapped_column(
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    document_skeleton_id: Mapped[UUID] = mapped_column(
         ForeignKey("document_skeletons.id", ondelete="CASCADE")
     )
     name: Mapped[str] = mapped_column(String(150))
@@ -38,10 +40,10 @@ class DocumentSkeletonFieldMatch(Base):
     __tablename__ = "document_skeleton_field_matches"
     __table_args__ = (CheckConstraint("field_id <> match_field_id", name="not_self"),)
 
-    field_id: Mapped[int] = mapped_column(
+    field_id: Mapped[UUID] = mapped_column(
         ForeignKey("document_skeleton_fields.id", ondelete="CASCADE"), primary_key=True
     )
-    match_field_id: Mapped[int] = mapped_column(
+    match_field_id: Mapped[UUID] = mapped_column(
         ForeignKey("document_skeleton_fields.id", ondelete="CASCADE"),
         primary_key=True,
         index=True,
