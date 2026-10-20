@@ -61,15 +61,20 @@ src/
   users/
     models.py         # users table
     enums.py          # UserRole
-    service.py        # user reads/writes (auth uses these too)
-    schemas.py        # PublicUser, Username, Password
+    service.py        # user reads/writes + rules (last active admin, no self-edit)
+    schemas.py        # PublicUser, Username, Password, CompanyRole, user requests
+    views.py          # /api/users — company admin manages their own company
   companies/
     models.py         # companies table
-    service.py        # company reads
-    schemas.py        # CompanyRef
+    service.py        # company reads/writes
+    schemas.py        # CompanyRef, CompanyRead, CompanyName
+  admin/              # owns no table
+    views.py          # /api/admin — stats, companies, company users (super admin)
+    flows.py          # stats, list with counts, create company + its first admin
+    schemas.py        # PlatformStats, CompanyListItem, CompanyDetail, admin requests
   templates/          # models.py (3 skeleton tables), enums.py (FieldType) — API in step 3
-  journeys/           # models.py (journeys, segments) — API in step 4
-  documents/          # models.py (5 document tables), enums.py (DocumentStatus) — API in steps 4–5
+  journeys/           # models.py, service.py (counts so far) — API in step 4
+  documents/          # models.py, enums.py, service.py (counts so far) — API in steps 4–5
 scripts/
   seed_super_admin.py
   seed_demo.py
@@ -78,6 +83,8 @@ tests/
   test_health.py
   test_errors.py      # error shapes: validation 400, AppError, 404, 500
   test_auth.py
+  test_users.py       # /api/users
+  test_admin.py       # /api/admin
 ```
 
 Every folder with Python files has an `__init__.py`, which marks it as a package so it can be imported (`from src.common.config import ...`).
@@ -160,6 +167,18 @@ Conventions come from `~/Desktop/Projects/docs/backend/A-architecture.md` and `M
 - **Async tests**: `pytest-asyncio` (`asyncio_mode = "auto"`), fixtures with `yield`, `scope="session"` vs per-test; `httpx.AsyncClient` + `ASGITransport` (calls the app in-process); why the test engine uses `NullPool`
 - **Test isolation**: `TRUNCATE ... RESTART IDENTITY CASCADE` before each test; factory helpers vs fixtures
 
+## Super admin + company users — what to look up
+
+- **`APIRouter(dependencies=[Depends(...)])`**: a permission check applied to every route in the router (Express `router.use(middleware)`)
+- **Dependencies built on dependencies**: `CurrentCompanyId` depends on `CurrentUser`, which depends on `DbSession` — FastAPI resolves (and caches) the chain per request
+- **`status_code=201`** on the decorator
+- **Pydantic `AfterValidator`** for custom rules and messages; `Literal[...]` to allow only some enum members; `model_validator(mode="after")` for whole-body rules ("at least one field")
+- **`model_dump(exclude_none=True)` / `exclude_unset=True`**: getting only the fields the client sent, for PATCH
+- **`func.count()`, `group_by`, `select_from`** in SQLAlchemy; `db.scalar` vs `db.scalars` vs `db.execute`
+- **`db.refresh(obj)`**: reloading values the database set (`server_default`, `onupdate`) — needed in async, where lazy loading isn't allowed
+- **Why one `AsyncSession` can't run queries concurrently** (no `asyncio.gather` on the same session)
+- **The walrus operator** `:=` (`if password := changes.pop("password", None):`)
+
 ## Project structure — what to look up
 
 - **Package by feature vs by layer**; FastAPI docs "Bigger Applications"; `zhanymkanov/fastapi-best-practices`; Netflix `dispatch`
@@ -168,6 +187,9 @@ Conventions come from `~/Desktop/Projects/docs/backend/A-architecture.md` and `M
 - **`from package import module as alias`** (`from src.users import service as users`): importing a module, not names, so calls read `users.get_user(...)`
 
 ## Open questions for our next discussion
+
+- **Who commits?** Each service write commits its own change (like Node's repositories). Creating a company and then its admin is therefore two transactions. Like Node, we check both conflicts first, but a crash in between could still leave a company without an admin. The alternative is that services only `flush()` and the flow or view commits once (a "unit of work"). Decide before the journeys/documents step, which has bigger multi-row writes.
+- **Counts through owner services** (§9) cost 2–6 small queries instead of one query joining other modules' tables. Fine at this scale. Worth revisiting only if the admin pages get slow.
 
 - Tests build tables with `Base.metadata.create_all` (fast, no migrations). The alternative is running `alembic upgrade head` on the test database, which also tests the migrations. Which do you prefer?
 - Response envelope: kept `{ success, message, data }` so the React app works unchanged. Plain FastAPI responses (data only, errors as `{ detail }`) are more common in Python codebases — keep or drop?

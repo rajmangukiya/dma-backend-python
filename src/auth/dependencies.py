@@ -44,3 +44,13 @@ def require(*required: Permission):
         return user
 
     return check
+
+
+async def get_company_id(user: CurrentUser) -> int:
+    """The signed-in user's company; 403 for the super admin, who has none."""
+    if user.company_id is None:
+        raise AppError.forbidden("This action is only available to company users")
+    return user.company_id
+
+
+CurrentCompanyId = Annotated[int, Depends(get_company_id)]

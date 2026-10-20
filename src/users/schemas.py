@@ -1,14 +1,42 @@
+import re
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
-from pydantic import Field, StringConstraints
+from pydantic import AfterValidator, model_validator
 
 from src.common.schemas import CamelModel
 from src.users.enums import UserRole
 
-# Reusable constrained types (also used by auth, and later by admin when creating users)
-Password = Annotated[str, Field(min_length=8, max_length=128)]
-Username = Annotated[str, StringConstraints(strip_whitespace=True, to_lower=True, min_length=1)]
+_USERNAME_PATTERN = re.compile(r"^[a-z0-9._-]+$")
+
+
+def _check_username(value: str) -> str:
+    value = value.strip().lower()
+    if len(value) < 3:
+        raise ValueError("Username must be at least 3 characters")
+    if len(value) > 100:
+        raise ValueError("Username must be at most 100 characters")
+    if not _USERNAME_PATTERN.match(value):
+        raise ValueError("Use letters, numbers, dots, dashes or underscores")
+    return value
+
+
+def _check_password(value: str) -> str:
+    if len(value) < 8:
+        raise ValueError("Password must be at least 8 characters")
+    if len(value) > 128:
+        raise ValueError("Password must be at most 128 characters")
+    return value
+
+
+# Reusable constrained types for new accounts (same rules and messages as the Node API).
+# Validators that raise ValueError report just their message on the field.
+Username = Annotated[str, AfterValidator(_check_username)]
+Password = Annotated[str, AfterValidator(_check_password)]
+# Any role except super_admin
+CompanyRole = Literal[
+    UserRole.ADMIN, UserRole.SKELETON_DESIGNER, UserRole.OPERATIONS, UserRole.VIEWER
+]
 
 
 class PublicUser(CamelModel):
@@ -21,3 +49,32 @@ class PublicUser(CamelModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+
+
+class AtLeastOneField(CamelModel):
+    """Base for PATCH bodies: every field optional, but the body can't be empty."""
+
+    @model_validator(mode="after")
+    def at_least_one_field(self):
+        if not self.changes():
+            raise ValueError("At least one field is required")
+        return self
+
+    def changes(self) -> dict:
+        """Only the fields the client actually sent (null counts as not sent)."""
+        return self.model_dump(exclude_none=True)
+
+
+class CreateUserRequest(CamelModel):
+    username: Username
+    password: Password
+    role: CompanyRole
+
+
+class UpdateUserRequest(AtLeastOneField):
+    role: CompanyRole | None = None
+    is_active: bool | None = None
+
+
+class ResetPasswordRequest(CamelModel):
+    password: Password
