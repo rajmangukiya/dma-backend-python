@@ -6,8 +6,10 @@ requires-python = ">=3.13"
 dependencies = [
     "alembic>=1.20.0",
     "asyncpg>=0.32.0",
+    "bcrypt>=5.0.0",
     "fastapi[standard]>=0.143.3",
     "pydantic-settings>=2.16.0",
+    "pyjwt>=2.15.1",
     "sqlalchemy[asyncio]>=2.1.5",
 ]
 
@@ -15,6 +17,7 @@ dependencies = [
 dev = [
     "httpx2>=2.13.1",
     "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
     "ruff>=0.17.1",
 ]
 
@@ -32,3 +35,6 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Run `async def` tests and fixtures without marking each one
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

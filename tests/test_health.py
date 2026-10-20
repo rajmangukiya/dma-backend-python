@@ -2,8 +2,8 @@ from collections.abc import AsyncIterator
 
 from fastapi.testclient import TestClient
 
-from app.db.session import get_db
-from app.main import app
+from src.database.session import get_db
+from src.main import app
 
 client = TestClient(app)
 

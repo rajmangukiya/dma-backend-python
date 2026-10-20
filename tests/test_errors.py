@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import BaseModel, Field
 
-from app.core.errors import AppError, register_error_handlers
+from src.common.errors import AppError, register_error_handlers
 
 
 # A throwaway app with routes that fail on purpose, to test the error shapes
